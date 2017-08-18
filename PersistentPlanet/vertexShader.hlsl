@@ -1,4 +1,9 @@
-﻿float4 main(float4 position : POSITION) : SV_POSITION
+﻿cbuffer PerObject: register(b0)
 {
-	return position;
+	float4x4 WorldViewProj;
+};
+
+float4 main(float4 position : POSITION) : SV_POSITION
+{
+	return mul(position, WorldViewProj);
 }

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
+using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 
 namespace PersistentPlanet
@@ -18,6 +20,7 @@ namespace PersistentPlanet
         private Device _device;
         private DeviceContext _deviceContext;
         private GameObject _gameObject;
+        private Buffer _worldViewProjectionBuffer;
 
         public Game(IRenderWindow renderWindow)
         {
@@ -55,12 +58,42 @@ namespace PersistentPlanet
 
             _gameObject = new GameObject();
             _gameObject.Initialise(_device);
+            Matrix.PerspectiveFovRH(MathUtil.DegreesToRadians(45),
+                                    _renderWindow.WindowWidth / (float) _renderWindow.WindowHeight,
+                                    0,
+                                    100);
+
+            _worldViewProjectionBuffer = new Buffer(_device,
+                                                    Utilities.SizeOf<Matrix>(),
+                                                    ResourceUsage.Default,
+                                                    BindFlags.ConstantBuffer,
+                                                    CpuAccessFlags.None,
+                                                    ResourceOptionFlags.None,
+                                                    0);
+
+
+                var cameraPosition = new Vector3(1.5f, 1.8f, -3);
+            var cameraTarget = Vector3.Zero;
+            var cameraUp = Vector3.UnitY;
+            var worldMatrix = Matrix.Identity;
+            var viewMatrix = Matrix.LookAtLH(cameraPosition, cameraTarget, cameraUp); // reorient everything to camera space
+            var projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, _renderWindow.WindowWidth / (float)_renderWindow.WindowHeight, .5f, 100f); // create a generic perspective projection matrix
+            var viewProjection = Matrix.Multiply(viewMatrix, projectionMatrix); // apply the perspective projection to the view matrix so that we're performing both operations
+            var worldViewProjection = worldMatrix * viewProjection; // include world translation with the view projection matrix
+            worldViewProjection.Transpose();
+
+
+            _deviceContext.UpdateSubresource(ref worldViewProjection, _worldViewProjectionBuffer);
+            _deviceContext.VertexShader.SetConstantBuffer(0, _worldViewProjectionBuffer);
+
+
         }
 
         public void Dispose()
         {
             _gameObject.Dispose();
 
+            _worldViewProjectionBuffer.Dispose();
             _renderTargetView.Dispose();
             _backBuffer.Dispose();
             _swapChain.Dispose();
@@ -76,11 +109,12 @@ namespace PersistentPlanet
             var lastFps = 0L;
             while (_renderWindow.NextFrame())
             {
+                
                 _deviceContext.OutputMerger.SetRenderTargets(_renderTargetView);
                 _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
 
                 _gameObject.Render(_deviceContext);
-
+                
                 _swapChain.Present(1, PresentFlags.None);
 
                 frame++;
