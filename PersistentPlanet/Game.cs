@@ -57,11 +57,7 @@ namespace PersistentPlanet
             });
 
             _gameObject = new GameObject();
-            _gameObject.Initialise(_device);
-            Matrix.PerspectiveFovRH(MathUtil.DegreesToRadians(45),
-                                    _renderWindow.WindowWidth / (float) _renderWindow.WindowHeight,
-                                    0,
-                                    100);
+            _gameObject.Initialise(_device, _deviceContext);
 
             _worldViewProjectionBuffer = new Buffer(_device,
                                                     Utilities.SizeOf<Matrix>(),
@@ -72,21 +68,18 @@ namespace PersistentPlanet
                                                     0);
 
 
-                var cameraPosition = new Vector3(1.5f, 1.8f, -3);
-            var cameraTarget = Vector3.Zero;
+            var cameraPosition = new Vector3(0, 5f, 0);
+            var cameraTarget = new Vector3(100, 0, 100);
             var cameraUp = Vector3.UnitY;
             var worldMatrix = Matrix.Identity;
-            var viewMatrix = Matrix.LookAtLH(cameraPosition, cameraTarget, cameraUp); // reorient everything to camera space
-            var projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, _renderWindow.WindowWidth / (float)_renderWindow.WindowHeight, .5f, 100f); // create a generic perspective projection matrix
-            var viewProjection = Matrix.Multiply(viewMatrix, projectionMatrix); // apply the perspective projection to the view matrix so that we're performing both operations
-            var worldViewProjection = worldMatrix * viewProjection; // include world translation with the view projection matrix
+            var viewMatrix = Matrix.LookAtLH(cameraPosition, cameraTarget, cameraUp);
+            var projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, _renderWindow.WindowWidth / (float)_renderWindow.WindowHeight, .5f, 1000f);
+            var viewProjection = Matrix.Multiply(viewMatrix, projectionMatrix);
+            var worldViewProjection = worldMatrix * viewProjection;
             worldViewProjection.Transpose();
-
 
             _deviceContext.UpdateSubresource(ref worldViewProjection, _worldViewProjectionBuffer);
             _deviceContext.VertexShader.SetConstantBuffer(0, _worldViewProjectionBuffer);
-
-
         }
 
         public void Dispose()
