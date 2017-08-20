@@ -67,7 +67,7 @@ namespace PersistentPlanet
                                                     ResourceOptionFlags.None,
                                                     0);
 
-            var cameraPosition = new Vector3(0, 20f, 0);
+            var cameraPosition = new Vector3(150f, 10f, 0);
             var cameraTarget = new Vector3(100, 0, 100);
             var cameraUp = Vector3.UnitY;
             var worldMatrix = Matrix.Identity;

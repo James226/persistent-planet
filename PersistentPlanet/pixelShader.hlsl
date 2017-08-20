@@ -1,4 +1,7 @@
-﻿cbuffer LightBuffer
+﻿Texture2D shaderTexture;
+SamplerState SampleType;
+
+cbuffer LightBuffer : register(b0)
 {
 	float4 ambientColor;
 	float4 diffuseColor;
@@ -8,23 +11,25 @@
 
 struct Input {
 	float4 position : SV_POSITION;
+	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 };
 
 float4 main(Input input) : SV_TARGET
 {
+	float4 textureColor;
 	float3 lightDir;
 	float lightIntensity;
 	float4 color;
 
+	textureColor = shaderTexture.Sample(SampleType, input.tex);
+
 
 	// Set the default output color to the ambient light value for all pixels.
-	color = float4(0.1, 0.1, 0.1, 1);
-	//color = ambientColor;
+	color = ambientColor;
 
 	// Invert the light direction for calculations.
-	lightDir = -float3(0, -0.5, 0.75);
-	//lightDir = -lightDirection;
+	lightDir = -lightDirection;
 
 	// Calculate the amount of light on this pixel.
 	lightIntensity = saturate(dot(input.normal, lightDir));
@@ -32,12 +37,13 @@ float4 main(Input input) : SV_TARGET
 	if (lightIntensity > 0.0f)
 	{
 		// Determine the final diffuse color based on the diffuse color and the amount of light intensity.
-		color += (float4(0.3, 1, 0.3, 1) * lightIntensity);
-		//color += (diffuseColor * lightIntensity);
+		color += (diffuseColor * lightIntensity);
 	}
 
 	// Saturate the final light color.
 	color = saturate(color);
+
+	color = color * textureColor;
 
 	return color;
 }

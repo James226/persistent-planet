@@ -18,16 +18,19 @@ namespace PersistentPlanet
     public struct Vertex
     {
         public readonly Vector3 Position;
+        public readonly Vector2 Texture;
         public readonly Vector3 Normal;
 
-        public Vertex(Vector3 position, Vector3 normal)
+        public Vertex(Vector3 position, Vector2 texture, Vector3 normal)
         {
             Position = position;
+            Texture = texture;
             Normal = normal;
         }
     }
 
-    struct LightBufferType
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LightBufferType
     {
         public Vector4 ambientColor;
         public Vector4 diffuseColor;
@@ -35,15 +38,18 @@ namespace PersistentPlanet
         public float padding;
     };
 
-    struct HeightMapType
+    public struct HeightMapType
     {
         public float x, y, z;
+        public float tu, tv;
         public float nx, ny, nz;
     };
 
 
     public class GameObject : IDisposable
     {
+        private const int TextureRepeat = 32;
+
         private CompilationResult _vertexShaderByteCode;
         private CompilationResult _pixelShaderByteCode;
         private VertexShader _vertexShader;
@@ -55,13 +61,17 @@ namespace PersistentPlanet
         private Buffer _indexBuffer;
         private Buffer _lightBuffer;
         private HeightMapType[] _heightmap;
+        private Buffer _objectVsBuffer;
+        private ShaderResourceView _texture;
 
         public void Initialise(Device device, DeviceContext deviceContext)
         {
             GenerateBuffers(device);
-            
-            _vertexShaderByteCode = ShaderBytecode.CompileFromFile("vertexShader.hlsl", "main", "vs_4_0", ShaderFlags.Debug);
-            _pixelShaderByteCode = ShaderBytecode.CompileFromFile("pixelShader.hlsl", "main", "ps_4_0", ShaderFlags.Debug);
+
+            _vertexShaderByteCode =
+                ShaderBytecode.CompileFromFile("vertexShader.hlsl", "main", "vs_4_0", ShaderFlags.Debug);
+            _pixelShaderByteCode =
+                ShaderBytecode.CompileFromFile("pixelShader.hlsl", "main", "ps_4_0", ShaderFlags.Debug);
 
             _vertexShader = new VertexShader(device, _vertexShaderByteCode);
             _pixelShader = new PixelShader(device, _pixelShaderByteCode);
@@ -69,6 +79,7 @@ namespace PersistentPlanet
             InputElement[] inputElements =
             {
                 new InputElement("POSITION", 0, Format.R32G32B32_Float, 0),
+                new InputElement("TEXCOORD", 0, Format.R32G32_Float, 0),
                 new InputElement("NORMAL", 0, Format.R32G32B32_Float, 0)
             };
             _inputSignature = ShaderSignature.GetInputSignature(_vertexShaderByteCode);
@@ -76,34 +87,51 @@ namespace PersistentPlanet
 
             _lightBuffer = new Buffer(device,
                                       Utilities.SizeOf<LightBufferType>(),
-                                      ResourceUsage.Dynamic,
+                                      ResourceUsage.Default,
                                       BindFlags.ConstantBuffer,
-                                      CpuAccessFlags.Write,
+                                      CpuAccessFlags.None,
                                       ResourceOptionFlags.None,
                                       0);
+
+            _objectVsBuffer = new Buffer(device,
+                                         Utilities.SizeOf<Matrix>(),
+                                         ResourceUsage.Default,
+                                         BindFlags.ConstantBuffer,
+                                         CpuAccessFlags.None,
+                                         ResourceOptionFlags.None,
+                                         0);
+
+            var worldMatrix = Matrix.Identity;
+
+            deviceContext.UpdateSubresource(ref worldMatrix, _objectVsBuffer);
 
             var light = new LightBufferType
             {
                 ambientColor = new Vector4(0.05f, 0.05f, 0.05f, 1.0f),
                 diffuseColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                lightDirection = new Vector3(0.0f, 0.0f, 0.75f)
+                lightDirection = new Vector3(0.2f, -0.2f, 0.2f)
             };
 
             deviceContext.UpdateSubresource(ref light, _lightBuffer);
-
         }
 
-       private void GenerateBuffers(Device device)
+        private void GenerateBuffers(Device device)
         {
             var image = new Bitmap("heightmap.bmp");
             var terrainWidth = image.Width;
             var terrainHeight = image.Height;
 
+            using (var bitmap = TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "sand.jpg"))
+            using (var texture = TextureLoader.CreateTexture2DFromBitmap(device, bitmap))
+            {
+                _texture = new ShaderResourceView(device, texture);
+            }
+
             byte GetHeight(int x, int z)
             {
                 var height = image.GetPixel(x, z).R;
 
-                return (byte)((height / 256f) * 10);
+                return (byte) ((height / 256f) * 64);
             }
 
             _heightmap = new HeightMapType[terrainWidth * terrainHeight];
@@ -123,7 +151,7 @@ namespace PersistentPlanet
             }
 
             CalculateNormals(terrainWidth, terrainHeight);
-
+            CalculateTextureCoordinates(terrainWidth, terrainHeight);
 
             var vertexCount = (terrainWidth - 1) * (terrainHeight - 1) * 8;
             var indexCount = vertexCount;
@@ -145,6 +173,7 @@ namespace PersistentPlanet
                 void AddIndex(int idx)
                 {
                     vertices[index] = new Vertex(new Vector3(_heightmap[idx].x, _heightmap[idx].y, _heightmap[idx].z),
+                                                 new Vector2(_heightmap[idx].tu, _heightmap[idx].tv),
                                                  new Vector3(_heightmap[idx].nx,
                                                              _heightmap[idx].ny,
                                                              _heightmap[idx].nz));
@@ -253,7 +282,7 @@ namespace PersistentPlanet
                     }
 
                     // Take the average of the faces touching this vertex.
-                    sum /= (float)count;
+                    sum /= (float) count;
 
                     // Calculate the length of this normal.
                     var length = sum.Length();
@@ -269,11 +298,70 @@ namespace PersistentPlanet
             }
         }
 
+        private void CalculateTextureCoordinates(int terrainWidth, int terrainHeight)
+        {
+            int incrementCount;
+            int tuCount, tvCount;
+            float incrementValue, tuCoordinate, tvCoordinate;
+
+
+            // Calculate how much to increment the texture coordinates by.
+            incrementValue = TextureRepeat / (float) terrainWidth;
+
+            // Calculate how many times to repeat the texture.
+            incrementCount = terrainWidth / TextureRepeat;
+
+            // Initialize the tu and tv coordinate values.
+            tuCoordinate = 0.0f;
+            tvCoordinate = 1.0f;
+
+            // Initialize the tu and tv coordinate indexes.
+            tuCount = 0;
+            tvCount = 0;
+
+            // Loop through the entire height map and calculate the tu and tv texture coordinates for each vertex.
+            for (var j = 0; j < terrainHeight; j++)
+            {
+                for (var i = 0; i < terrainWidth; i++)
+                {
+                    // Store the texture coordinate in the height map.
+                    _heightmap[(terrainWidth * j) + i].tu = tuCoordinate;
+                    _heightmap[(terrainWidth * j) + i].tv = tvCoordinate;
+
+                    // Increment the tu texture coordinate by the increment value and increment the index by one.
+                    tuCoordinate += incrementValue;
+                    tuCount++;
+
+                    // Check if at the far right end of the texture and if so then start at the beginning again.
+                    if (tuCount == incrementCount)
+                    {
+                        tuCoordinate = 0.0f;
+                        tuCount = 0;
+                    }
+                }
+
+                // Increment the tv texture coordinate by the increment value and increment the index by one.
+                tvCoordinate -= incrementValue;
+                tvCount++;
+
+                // Check if at the top of the texture and if so then start at the bottom again.
+                if (tvCount == incrementCount)
+                {
+                    tvCoordinate = 1.0f;
+                    tvCount = 0;
+                }
+            }
+        }
+
         public void Dispose()
         {
+            _texture.Dispose();
+
             _lightBuffer.Dispose();
             _inputLayout.Dispose();
             _inputSignature.Dispose();
+
+            _objectVsBuffer.Dispose();
 
             _pixelShader.Dispose();
             _vertexShader.Dispose();
@@ -287,13 +375,20 @@ namespace PersistentPlanet
 
         public void Render(DeviceContext deviceContext)
         {
+
             deviceContext.VertexShader.Set(_vertexShader);
             deviceContext.PixelShader.Set(_pixelShader);
+            deviceContext.VertexShader.SetConstantBuffer(1, _objectVsBuffer);
             deviceContext.PixelShader.SetConstantBuffer(0, _lightBuffer);
+            deviceContext.PixelShader.SetShaderResource(0, _texture);
 
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
             deviceContext.InputAssembler.InputLayout = _inputLayout;
-            deviceContext.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(_vertexBuffer, Utilities.SizeOf<Vertex>(), 0));
+            deviceContext.InputAssembler.SetVertexBuffers(0,
+                                                          new VertexBufferBinding(
+                                                              _vertexBuffer,
+                                                              Utilities.SizeOf<Vertex>(),
+                                                              0));
             deviceContext.InputAssembler.SetIndexBuffer(_indexBuffer, Format.R32_UInt, 0);
 
             deviceContext.DrawIndexed(_indices.Length, 0, 0);
