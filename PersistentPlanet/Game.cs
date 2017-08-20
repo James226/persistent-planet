@@ -67,8 +67,7 @@ namespace PersistentPlanet
                                                     ResourceOptionFlags.None,
                                                     0);
 
-
-            var cameraPosition = new Vector3(0, 5f, 0);
+            var cameraPosition = new Vector3(0, 20f, 0);
             var cameraTarget = new Vector3(100, 0, 100);
             var cameraUp = Vector3.UnitY;
             var worldMatrix = Matrix.Identity;
@@ -102,12 +101,11 @@ namespace PersistentPlanet
             var lastFps = 0L;
             while (_renderWindow.NextFrame())
             {
-                
                 _deviceContext.OutputMerger.SetRenderTargets(_renderTargetView);
                 _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
 
                 _gameObject.Render(_deviceContext);
-                
+
                 _swapChain.Present(1, PresentFlags.None);
 
                 frame++;

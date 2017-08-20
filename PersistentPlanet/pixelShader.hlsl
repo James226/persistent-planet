@@ -19,10 +19,12 @@ float4 main(Input input) : SV_TARGET
 
 
 	// Set the default output color to the ambient light value for all pixels.
-	color = ambientColor;
+	color = float4(0.1, 0.1, 0.1, 1);
+	//color = ambientColor;
 
 	// Invert the light direction for calculations.
-	lightDir = -lightDirection;
+	lightDir = -float3(0, -0.5, 0.75);
+	//lightDir = -lightDirection;
 
 	// Calculate the amount of light on this pixel.
 	lightIntensity = saturate(dot(input.normal, lightDir));
@@ -30,7 +32,8 @@ float4 main(Input input) : SV_TARGET
 	if (lightIntensity > 0.0f)
 	{
 		// Determine the final diffuse color based on the diffuse color and the amount of light intensity.
-		color += (diffuseColor * lightIntensity);
+		color += (float4(0.3, 1, 0.3, 1) * lightIntensity);
+		//color += (diffuseColor * lightIntensity);
 	}
 
 	// Saturate the final light color.

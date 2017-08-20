@@ -15,6 +15,7 @@ namespace PersistentPlanet
     {
         private readonly string _appName;
         private readonly string _className;
+        private Win32.WNDCLASSEX _windowClass;
         public int WindowWidth { get; }
         public int WindowHeight { get; }
 
@@ -44,7 +45,7 @@ namespace PersistentPlanet
 
         private bool RegisterClass()
         {
-            var wcex = new Win32.WNDCLASSEX
+            _windowClass = new Win32.WNDCLASSEX
             {
                 style = Win32.ClassStyles.DoubleClicks,
                 lpfnWndProc = WndProc,
@@ -57,9 +58,9 @@ namespace PersistentPlanet
                 lpszMenuName = null,
                 lpszClassName = _className
             };
-            wcex.cbSize = (uint)Marshal.SizeOf(wcex);
+            _windowClass.cbSize = (uint)Marshal.SizeOf(_windowClass);
 
-            if (Win32.RegisterClassEx(ref wcex) == 0)
+            if (Win32.RegisterClassEx(ref _windowClass) == 0)
             {
                 Win32.MessageBox(IntPtr.Zero, "RegisterClassEx failed", _appName,
                     (int)(Win32.MB_OK | Win32.MB_ICONEXCLAMATION | Win32.MB_SETFOREGROUND));
