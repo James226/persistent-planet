@@ -1,6 +1,6 @@
 ﻿cbuffer Global: register(b0)
 {
-	float4x4 WorldViewProj;
+	float4x4 ViewProj;
 };
 
 cbuffer Object
@@ -25,7 +25,7 @@ struct Output
 Output main(Input input)
 {
 	Output output;
-	output.position = mul(input.position, WorldViewProj);
+	output.position = mul(input.position, ViewProj);
 	output.position = mul(output.position, WorldMatrix);
 
 	output.tex = input.tex;

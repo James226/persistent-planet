@@ -20,7 +20,9 @@ namespace PersistentPlanet
         private Device _device;
         private DeviceContext _deviceContext;
         private GameObject _gameObject;
-        private Buffer _worldViewProjectionBuffer;
+        private Buffer _viewProjectionBuffer;
+        private Camera _camera;
+        private DepthStencilView _depthStencilView;
 
         public Game(IRenderWindow renderWindow)
         {
@@ -53,39 +55,85 @@ namespace PersistentPlanet
             _deviceContext.Rasterizer.SetViewport(new RawViewportF
             {
                 Height = _renderWindow.WindowHeight,
-                Width = _renderWindow.WindowWidth
+                Width = _renderWindow.WindowWidth,
+                MinDepth = 0,
+                MaxDepth = 1
             });
 
             _gameObject = new GameObject();
             _gameObject.Initialise(_device, _deviceContext);
 
-            _worldViewProjectionBuffer = new Buffer(_device,
-                                                    Utilities.SizeOf<Matrix>(),
-                                                    ResourceUsage.Default,
-                                                    BindFlags.ConstantBuffer,
-                                                    CpuAccessFlags.None,
-                                                    ResourceOptionFlags.None,
-                                                    0);
+            var initialiseContext = new InitialiseContext
+            {
+                Device = _device,
+                WindowSize = new Vector2(_renderWindow.WindowWidth, _renderWindow.WindowHeight)
+            };
 
-            var cameraPosition = new Vector3(150f, 10f, 0);
-            var cameraTarget = new Vector3(100, 0, 100);
-            var cameraUp = Vector3.UnitY;
-            var worldMatrix = Matrix.Identity;
-            var viewMatrix = Matrix.LookAtLH(cameraPosition, cameraTarget, cameraUp);
-            var projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, _renderWindow.WindowWidth / (float)_renderWindow.WindowHeight, .5f, 1000f);
-            var viewProjection = Matrix.Multiply(viewMatrix, projectionMatrix);
-            var worldViewProjection = worldMatrix * viewProjection;
-            worldViewProjection.Transpose();
+            var zBufferTextureDescription = new Texture2DDescription
+            {
+                Format = Format.D24_UNorm_S8_UInt,
+                ArraySize = 1,
+                MipLevels = 1,
+                Width = _renderWindow.WindowWidth,
+                Height = _renderWindow.WindowHeight,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Default,
+                BindFlags = BindFlags.DepthStencil,
+                CpuAccessFlags = CpuAccessFlags.None,
+                OptionFlags = ResourceOptionFlags.None
+            };
 
-            _deviceContext.UpdateSubresource(ref worldViewProjection, _worldViewProjectionBuffer);
-            _deviceContext.VertexShader.SetConstantBuffer(0, _worldViewProjectionBuffer);
+            var depthStencilDesc = new DepthStencilStateDescription
+            {
+                BackFace = new DepthStencilOperationDescription
+                {
+                    FailOperation = StencilOperation.Keep,
+                    PassOperation = StencilOperation.Keep,
+                    DepthFailOperation = StencilOperation.Decrement,
+                    Comparison = Comparison.Always
+                },
+                FrontFace = new DepthStencilOperationDescription
+                {
+                    FailOperation = StencilOperation.Keep,
+                    PassOperation = StencilOperation.Keep,
+                    DepthFailOperation = StencilOperation.Increment,
+                    Comparison = Comparison.Always
+                },
+                IsDepthEnabled = true,
+                DepthWriteMask = DepthWriteMask.All,
+                DepthComparison = Comparison.Less,
+
+                IsStencilEnabled = true,
+                StencilReadMask = 0xFF,
+                StencilWriteMask = 0xFF
+
+            };
+            using (var zBufferTexture = new Texture2D(_device, zBufferTextureDescription))
+            {
+                var depthStencilViewDescription = new DepthStencilViewDescription
+                {
+                    Format = Format.D24_UNorm_S8_UInt,
+                    Dimension = DepthStencilViewDimension.Texture2D,
+                    Texture2D = new DepthStencilViewDescription.Texture2DResource
+                    {
+                        MipSlice = 0
+                    }
+                };
+                _depthStencilView = new DepthStencilView(_device, zBufferTexture, depthStencilViewDescription);
+            }
+
+            var depthStencilState = new DepthStencilState(_device, depthStencilDesc);
+            _deviceContext.OutputMerger.SetDepthStencilState(depthStencilState);
+
+            _camera = new Camera();
+            _camera.Initialise(initialiseContext);
         }
 
         public void Dispose()
         {
             _gameObject.Dispose();
 
-            _worldViewProjectionBuffer.Dispose();
+            _viewProjectionBuffer.Dispose();
             _renderTargetView.Dispose();
             _backBuffer.Dispose();
             _swapChain.Dispose();
@@ -101,8 +149,11 @@ namespace PersistentPlanet
             var lastFps = 0L;
             while (_renderWindow.NextFrame())
             {
-                _deviceContext.OutputMerger.SetRenderTargets(_renderTargetView);
+                _deviceContext.OutputMerger.SetRenderTargets(_depthStencilView, _renderTargetView);
                 _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
+                _deviceContext.ClearDepthStencilView(_depthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
+
+                _camera.Apply(new RenderContext { Context = _deviceContext });
 
                 _gameObject.Render(_deviceContext);
 

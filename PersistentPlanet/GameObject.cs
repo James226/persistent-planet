@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using SharpDX;
-using SharpDX.D3DCompiler;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -48,155 +47,101 @@ namespace PersistentPlanet
 
     public class GameObject : IDisposable
     {
-        private const int TextureRepeat = 32;
-
-        private CompilationResult _vertexShaderByteCode;
-        private CompilationResult _pixelShaderByteCode;
         private VertexShader _vertexShader;
         private PixelShader _pixelShader;
-        private ShaderSignature _inputSignature;
-        private InputLayout _inputLayout;
         private Buffer _vertexBuffer;
         private uint[] _indices;
         private Buffer _indexBuffer;
-        private Buffer _lightBuffer;
         private HeightMapType[] _heightmap;
-        private Buffer _objectVsBuffer;
-        private ShaderResourceView _texture;
 
         public void Initialise(Device device, DeviceContext deviceContext)
         {
             GenerateBuffers(device);
+            var initialiseContext = new InitialiseContext { Device = device };
 
-            _vertexShaderByteCode =
-                ShaderBytecode.CompileFromFile("vertexShader.hlsl", "main", "vs_4_0", ShaderFlags.Debug);
-            _pixelShaderByteCode =
-                ShaderBytecode.CompileFromFile("pixelShader.hlsl", "main", "ps_4_0", ShaderFlags.Debug);
+            _pixelShader = new PixelShader("pixelShader.hlsl", "main");
+            _pixelShader.Initialise(initialiseContext);
 
-            _vertexShader = new VertexShader(device, _vertexShaderByteCode);
-            _pixelShader = new PixelShader(device, _pixelShaderByteCode);
-
-            InputElement[] inputElements =
-            {
-                new InputElement("POSITION", 0, Format.R32G32B32_Float, 0),
-                new InputElement("TEXCOORD", 0, Format.R32G32_Float, 0),
-                new InputElement("NORMAL", 0, Format.R32G32B32_Float, 0)
-            };
-            _inputSignature = ShaderSignature.GetInputSignature(_vertexShaderByteCode);
-            _inputLayout = new InputLayout(device, _inputSignature, inputElements);
-
-            _lightBuffer = new Buffer(device,
-                                      Utilities.SizeOf<LightBufferType>(),
-                                      ResourceUsage.Default,
-                                      BindFlags.ConstantBuffer,
-                                      CpuAccessFlags.None,
-                                      ResourceOptionFlags.None,
-                                      0);
-
-            _objectVsBuffer = new Buffer(device,
-                                         Utilities.SizeOf<Matrix>(),
-                                         ResourceUsage.Default,
-                                         BindFlags.ConstantBuffer,
-                                         CpuAccessFlags.None,
-                                         ResourceOptionFlags.None,
-                                         0);
-
-            var worldMatrix = Matrix.Identity;
-
-            deviceContext.UpdateSubresource(ref worldMatrix, _objectVsBuffer);
-
-            var light = new LightBufferType
-            {
-                ambientColor = new Vector4(0.05f, 0.05f, 0.05f, 1.0f),
-                diffuseColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                lightDirection = new Vector3(0.2f, -0.2f, 0.2f)
-            };
-
-            deviceContext.UpdateSubresource(ref light, _lightBuffer);
+            _vertexShader = new VertexShader("vertexShader.hlsl", "main");
+            _vertexShader.Initialise(initialiseContext);
         }
 
         private void GenerateBuffers(Device device)
         {
-            var image = new Bitmap("heightmap.bmp");
-            var terrainWidth = image.Width;
-            var terrainHeight = image.Height;
-
-            using (var bitmap = TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "sand.jpg"))
-            using (var texture = TextureLoader.CreateTexture2DFromBitmap(device, bitmap))
+            using (var image = new Bitmap("heightmap.bmp"))
             {
-                _texture = new ShaderResourceView(device, texture);
-            }
+                var terrainWidth = image.Width;
+                var terrainHeight = image.Height;
 
-            byte GetHeight(int x, int z)
-            {
-                var height = image.GetPixel(x, z).R;
+                var vertexCount = (terrainWidth - 1) * (terrainHeight - 1) * 8;
+                var indexCount = vertexCount;
 
-                return (byte) ((height / 256f) * 64);
-            }
+                var vertices = new Vertex[vertexCount];
+                var indices = new uint[indexCount];
 
-            _heightmap = new HeightMapType[terrainWidth * terrainHeight];
-
-            for (var j = 0; j < terrainHeight; j++)
-            {
-                for (var i = 0; i < terrainWidth; i++)
+                byte GetHeight(int x, int z)
                 {
-                    var height = GetHeight(i, j);
+                    var height = image.GetPixel(x, z).R;
 
-                    var idx = (terrainWidth * j) + i;
-
-                    _heightmap[idx].x = i;
-                    _heightmap[idx].y = height;
-                    _heightmap[idx].z = j;
-                }
-            }
-
-            CalculateNormals(terrainWidth, terrainHeight);
-            CalculateTextureCoordinates(terrainWidth, terrainHeight);
-
-            var vertexCount = (terrainWidth - 1) * (terrainHeight - 1) * 8;
-            var indexCount = vertexCount;
-
-            var vertices = new Vertex[vertexCount];
-            var indices = new uint[indexCount];
-
-            uint index = 0;
-
-            for (var j = 0; j < terrainHeight - 1; j++)
-            for (var i = 0; i < terrainWidth - 1; i++)
-            {
-
-                var index1 = (terrainWidth * j) + i; // Bottom left.
-                var index2 = (terrainWidth * j) + (i + 1); // Bottom right.
-                var index3 = (terrainWidth * (j + 1)) + i; // Upper left.
-                var index4 = (terrainWidth * (j + 1)) + (i + 1); // Upper right.
-
-                void AddIndex(int idx)
-                {
-                    vertices[index] = new Vertex(new Vector3(_heightmap[idx].x, _heightmap[idx].y, _heightmap[idx].z),
-                                                 new Vector2(_heightmap[idx].tu, _heightmap[idx].tv),
-                                                 new Vector3(_heightmap[idx].nx,
-                                                             _heightmap[idx].ny,
-                                                             _heightmap[idx].nz));
-                    indices[index] = index;
-                    index++;
+                    return (byte) ((height / 256f) * 64);
                 }
 
-                AddIndex(index3); // Upper left.
-                AddIndex(index4); // Upper right.
-                AddIndex(index1); // Bottom left.
-                AddIndex(index1); // Bottom left.
-                AddIndex(index4); // Upper right.
-                AddIndex(index2); // Bottom right.
+                _heightmap = new HeightMapType[terrainWidth * terrainHeight];
+
+                for (var j = 0; j < terrainHeight; j++)
+                {
+                    for (var i = 0; i < terrainWidth; i++)
+                    {
+                        var height = GetHeight(i, j);
+
+                        var idx = (terrainWidth * j) + i;
+
+                        _heightmap[idx].x = i;
+                        _heightmap[idx].y = height;
+                        _heightmap[idx].z = j;
+                    }
+                }
+
+                CalculateNormals(terrainWidth, terrainHeight);
+                CalculateTextureCoordinates(terrainWidth, terrainHeight);
+
+                uint index = 0;
+
+                for (var j = 0; j < terrainHeight - 1; j++)
+                for (var i = 0; i < terrainWidth - 1; i++)
+                {
+
+                    var index1 = (terrainWidth * j) + i; // Bottom left.
+                    var index2 = (terrainWidth * j) + (i + 1); // Bottom right.
+                    var index3 = (terrainWidth * (j + 1)) + i; // Upper left.
+                    var index4 = (terrainWidth * (j + 1)) + (i + 1); // Upper right.
+
+                    void AddIndex(int idx)
+                    {
+                        vertices[index] = new Vertex(
+                            new Vector3(_heightmap[idx].x, _heightmap[idx].y, _heightmap[idx].z),
+                            new Vector2(_heightmap[idx].tu, _heightmap[idx].tv),
+                            new Vector3(_heightmap[idx].nx,
+                                        _heightmap[idx].ny,
+                                        _heightmap[idx].nz));
+                        indices[index] = index;
+                        index++;
+                    }
+
+                    AddIndex(index3); // Upper left.
+                    AddIndex(index4); // Upper right.
+                    AddIndex(index1); // Bottom left.
+                    AddIndex(index1); // Bottom left.
+                    AddIndex(index4); // Upper right.
+                    AddIndex(index2); // Bottom right.
+                }
+
+                _vertexBuffer = Buffer.Create(device, BindFlags.VertexBuffer, vertices);
+
+                _indices = indices.ToArray();
+
+                _indexBuffer = Buffer.Create(device, BindFlags.IndexBuffer, _indices);
             }
-
-
-            image.Dispose();
-
-            _vertexBuffer = Buffer.Create(device, BindFlags.VertexBuffer, vertices);
-
-            _indices = indices.ToArray();
-
-            _indexBuffer = Buffer.Create(device, BindFlags.IndexBuffer, _indices);
         }
 
         private void CalculateNormals(int terrainWidth, int terrainHeight)
@@ -300,16 +245,18 @@ namespace PersistentPlanet
 
         private void CalculateTextureCoordinates(int terrainWidth, int terrainHeight)
         {
+            const int textureRepeat = 32;
+
             int incrementCount;
             int tuCount, tvCount;
             float incrementValue, tuCoordinate, tvCoordinate;
 
 
             // Calculate how much to increment the texture coordinates by.
-            incrementValue = TextureRepeat / (float) terrainWidth;
+            incrementValue = textureRepeat / (float) terrainWidth;
 
             // Calculate how many times to repeat the texture.
-            incrementCount = terrainWidth / TextureRepeat;
+            incrementCount = terrainWidth / textureRepeat;
 
             // Initialize the tu and tv coordinate values.
             tuCoordinate = 0.0f;
@@ -355,19 +302,8 @@ namespace PersistentPlanet
 
         public void Dispose()
         {
-            _texture.Dispose();
-
-            _lightBuffer.Dispose();
-            _inputLayout.Dispose();
-            _inputSignature.Dispose();
-
-            _objectVsBuffer.Dispose();
-
-            _pixelShader.Dispose();
             _vertexShader.Dispose();
-
-            _pixelShaderByteCode.Dispose();
-            _vertexShaderByteCode.Dispose();
+            _pixelShader.Dispose();
 
             _vertexBuffer.Dispose();
             _indexBuffer.Dispose();
@@ -375,15 +311,11 @@ namespace PersistentPlanet
 
         public void Render(DeviceContext deviceContext)
         {
-
-            deviceContext.VertexShader.Set(_vertexShader);
-            deviceContext.PixelShader.Set(_pixelShader);
-            deviceContext.VertexShader.SetConstantBuffer(1, _objectVsBuffer);
-            deviceContext.PixelShader.SetConstantBuffer(0, _lightBuffer);
-            deviceContext.PixelShader.SetShaderResource(0, _texture);
-
+            var renderContext = new RenderContext { Context = deviceContext };
+            _vertexShader.Apply(renderContext);
+            _pixelShader.Apply(renderContext);
             deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-            deviceContext.InputAssembler.InputLayout = _inputLayout;
+
             deviceContext.InputAssembler.SetVertexBuffers(0,
                                                           new VertexBufferBinding(
                                                               _vertexBuffer,

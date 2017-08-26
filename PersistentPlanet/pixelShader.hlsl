@@ -24,7 +24,6 @@ float4 main(Input input) : SV_TARGET
 
 	textureColor = shaderTexture.Sample(SampleType, input.tex);
 
-
 	// Set the default output color to the ambient light value for all pixels.
 	color = ambientColor;
 
