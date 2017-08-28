@@ -39,9 +39,9 @@ namespace PersistentPlanet
 
     public struct HeightMapType
     {
-        public float x, y, z;
-        public float tu, tv;
-        public float nx, ny, nz;
+        public float X, Y, Z;
+        public float Tu, Tv;
+        public float Nx, Ny, Nz;
     };
 
 
@@ -54,10 +54,9 @@ namespace PersistentPlanet
         private Buffer _indexBuffer;
         private HeightMapType[] _heightmap;
 
-        public void Initialise(Device device, DeviceContext deviceContext)
+        public void Initialise(InitialiseContext initialiseContext)
         {
-            GenerateBuffers(device);
-            var initialiseContext = new InitialiseContext { Device = device };
+            GenerateBuffers(initialiseContext.Device);
 
             _pixelShader = new PixelShader("pixelShader.hlsl", "main");
             _pixelShader.Initialise(initialiseContext);
@@ -96,9 +95,9 @@ namespace PersistentPlanet
 
                         var idx = (terrainWidth * j) + i;
 
-                        _heightmap[idx].x = i;
-                        _heightmap[idx].y = height;
-                        _heightmap[idx].z = j;
+                        _heightmap[idx].X = i;
+                        _heightmap[idx].Y = height;
+                        _heightmap[idx].Z = j;
                     }
                 }
 
@@ -119,11 +118,11 @@ namespace PersistentPlanet
                     void AddIndex(int idx)
                     {
                         vertices[index] = new Vertex(
-                            new Vector3(_heightmap[idx].x, _heightmap[idx].y, _heightmap[idx].z),
-                            new Vector2(_heightmap[idx].tu, _heightmap[idx].tv),
-                            new Vector3(_heightmap[idx].nx,
-                                        _heightmap[idx].ny,
-                                        _heightmap[idx].nz));
+                            new Vector3(_heightmap[idx].X, _heightmap[idx].Y, _heightmap[idx].Z),
+                            new Vector2(_heightmap[idx].Tu, _heightmap[idx].Tv),
+                            new Vector3(_heightmap[idx].Nx,
+                                        _heightmap[idx].Ny,
+                                        _heightmap[idx].Nz));
                         indices[index] = index;
                         index++;
                     }
@@ -162,9 +161,9 @@ namespace PersistentPlanet
                     var index3 = ((j + 1) * terrainWidth) + i;
 
                     // Get three vertices from the face.
-                    var vertex1 = new Vector3(_heightmap[index1].x, _heightmap[index1].y, _heightmap[index2].z);
-                    var vertex2 = new Vector3(_heightmap[index2].x, _heightmap[index2].y, _heightmap[index2].z);
-                    var vertex3 = new Vector3(_heightmap[index3].x, _heightmap[index3].y, _heightmap[index3].z);
+                    var vertex1 = new Vector3(_heightmap[index1].X, _heightmap[index1].Y, _heightmap[index2].Z);
+                    var vertex2 = new Vector3(_heightmap[index2].X, _heightmap[index2].Y, _heightmap[index2].Z);
+                    var vertex3 = new Vector3(_heightmap[index3].X, _heightmap[index3].Y, _heightmap[index3].Z);
 
 
                     // Calculate the two vectors for this face.
@@ -236,9 +235,9 @@ namespace PersistentPlanet
                     index = (j * terrainWidth) + i;
 
                     // Normalize the final shared normal for this vertex and store it in the height map array.
-                    _heightmap[index].nx = (sum.X / length);
-                    _heightmap[index].ny = (sum.Y / length);
-                    _heightmap[index].nz = (sum.Z / length);
+                    _heightmap[index].Nx = (sum.X / length);
+                    _heightmap[index].Ny = (sum.Y / length);
+                    _heightmap[index].Nz = (sum.Z / length);
                 }
             }
         }
@@ -272,8 +271,8 @@ namespace PersistentPlanet
                 for (var i = 0; i < terrainWidth; i++)
                 {
                     // Store the texture coordinate in the height map.
-                    _heightmap[(terrainWidth * j) + i].tu = tuCoordinate;
-                    _heightmap[(terrainWidth * j) + i].tv = tvCoordinate;
+                    _heightmap[(terrainWidth * j) + i].Tu = tuCoordinate;
+                    _heightmap[(terrainWidth * j) + i].Tv = tvCoordinate;
 
                     // Increment the tu texture coordinate by the increment value and increment the index by one.
                     tuCoordinate += incrementValue;
@@ -309,21 +308,21 @@ namespace PersistentPlanet
             _indexBuffer.Dispose();
         }
 
-        public void Render(DeviceContext deviceContext)
+        public void Render(IRenderContext renderContext)
         {
-            var renderContext = new RenderContext { Context = deviceContext };
             _vertexShader.Apply(renderContext);
             _pixelShader.Apply(renderContext);
-            deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            renderContext.Context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-            deviceContext.InputAssembler.SetVertexBuffers(0,
+            renderContext.Context.InputAssembler.SetVertexBuffers(0,
                                                           new VertexBufferBinding(
                                                               _vertexBuffer,
                                                               Utilities.SizeOf<Vertex>(),
                                                               0));
-            deviceContext.InputAssembler.SetIndexBuffer(_indexBuffer, Format.R32_UInt, 0);
 
-            deviceContext.DrawIndexed(_indices.Length, 0, 0);
+            renderContext.Context.InputAssembler.SetIndexBuffer(_indexBuffer, Format.R32_UInt, 0);
+
+            renderContext.Context.DrawIndexed(_indices.Length, 0, 0);
         }
     }
 }

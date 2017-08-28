@@ -14,10 +14,11 @@ namespace PersistentPlanet
             var renderWindow = new RenderWindow(AppName, ClassName, WindowWidth, WindowHeight);
             renderWindow.Create();
 
-            var game = new Game(renderWindow);
-            game.Initialise();
-
-            game.Run();
+            using (var game = new Game(renderWindow))
+            {
+                game.Initialise();
+                game.Run();
+            }
         }
     }
 }

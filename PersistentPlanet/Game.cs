@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
+using MemBus;
+using MemBus.Configurators;
 using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
+using SharpDX.DirectInput;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
-using Buffer = SharpDX.Direct3D11.Buffer;
 using Device = SharpDX.Direct3D11.Device;
 
 namespace PersistentPlanet
@@ -20,9 +23,11 @@ namespace PersistentPlanet
         private Device _device;
         private DeviceContext _deviceContext;
         private GameObject _gameObject;
-        private Buffer _viewProjectionBuffer;
         private Camera _camera;
         private DepthStencilView _depthStencilView;
+        private Input _input;
+        private IBus _bus;
+        private bool _running;
 
         public Game(IRenderWindow renderWindow)
         {
@@ -31,6 +36,10 @@ namespace PersistentPlanet
 
         public void Initialise()
         {
+            _running = true;
+            _bus = BusSetup.StartWith<Conservative>().Construct();
+            _bus.Subscribe<EscapePressedEvent>(_ => _running = false);
+
             var backBufferDesc = new ModeDescription(_renderWindow.WindowWidth,
                                                      _renderWindow.WindowHeight,
                                                      new Rational(60, 1),
@@ -60,14 +69,20 @@ namespace PersistentPlanet
                 MaxDepth = 1
             });
 
-            _gameObject = new GameObject();
-            _gameObject.Initialise(_device, _deviceContext);
-
             var initialiseContext = new InitialiseContext
             {
                 Device = _device,
-                WindowSize = new Vector2(_renderWindow.WindowWidth, _renderWindow.WindowHeight)
+                WindowSize = new Vector2(_renderWindow.WindowWidth, _renderWindow.WindowHeight),
+                RenderWindow = _renderWindow,
+                Bus = _bus
             };
+
+            _input = new Input();
+            _input.Initialise(initialiseContext);
+
+            _gameObject = new GameObject();
+            _gameObject.Initialise(initialiseContext);
+
 
             var zBufferTextureDescription = new Texture2DDescription
             {
@@ -131,14 +146,15 @@ namespace PersistentPlanet
 
         public void Dispose()
         {
-            _gameObject.Dispose();
+            _gameObject?.Dispose();
 
-            _viewProjectionBuffer.Dispose();
-            _renderTargetView.Dispose();
-            _backBuffer.Dispose();
-            _swapChain.Dispose();
-            _device.Dispose();
-            _deviceContext.Dispose();
+            _renderTargetView?.Dispose();
+            _backBuffer?.Dispose();
+            _swapChain?.Dispose();
+            _input?.Dispose();
+            _device?.Dispose();
+            _deviceContext?.Dispose();
+            _bus?.Dispose();
         }
 
         public void Run()
@@ -147,15 +163,19 @@ namespace PersistentPlanet
             sw.Start();
             var frame = 0;
             var lastFps = 0L;
-            while (_renderWindow.NextFrame())
+            while (_running && _renderWindow.NextFrame())
             {
+                var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, Input = _input };
+
+                _input.Update(renderContext);
+
                 _deviceContext.OutputMerger.SetRenderTargets(_depthStencilView, _renderTargetView);
                 _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
                 _deviceContext.ClearDepthStencilView(_depthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
 
-                _camera.Apply(new RenderContext { Context = _deviceContext });
+                _camera.Apply(renderContext);
 
-                _gameObject.Render(_deviceContext);
+                _gameObject.Render(renderContext);
 
                 _swapChain.Present(1, PresentFlags.None);
 
