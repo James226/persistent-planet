@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
 using MemBus;
 using MemBus.Configurators;
-using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
-using SharpDX.DirectInput;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using Device = SharpDX.Direct3D11.Device;
@@ -25,10 +21,10 @@ namespace PersistentPlanet
         private DeviceContext _deviceContext;
         private GameObject _gameObject;
         private Camera _camera;
-        private DepthStencilView _depthStencilView;
         private Input _input;
         private IBus _bus;
         private bool _running;
+        private DepthStencil _depthStencil;
 
         public Game(IRenderWindow renderWindow)
         {
@@ -73,73 +69,18 @@ namespace PersistentPlanet
             var initialiseContext = new InitialiseContext
             {
                 Device = _device,
-                WindowSize = new Vector2(_renderWindow.WindowWidth, _renderWindow.WindowHeight),
                 RenderWindow = _renderWindow,
                 Bus = _bus
             };
+
+            _depthStencil = new DepthStencil();
+            _depthStencil.Initialise(initialiseContext);
 
             _input = new Input();
             _input.Initialise(initialiseContext);
 
             _gameObject = new GameObject();
             _gameObject.Initialise(initialiseContext);
-
-
-            var zBufferTextureDescription = new Texture2DDescription
-            {
-                Format = Format.D24_UNorm_S8_UInt,
-                ArraySize = 1,
-                MipLevels = 1,
-                Width = _renderWindow.WindowWidth,
-                Height = _renderWindow.WindowHeight,
-                SampleDescription = new SampleDescription(1, 0),
-                Usage = ResourceUsage.Default,
-                BindFlags = BindFlags.DepthStencil,
-                CpuAccessFlags = CpuAccessFlags.None,
-                OptionFlags = ResourceOptionFlags.None
-            };
-
-            var depthStencilDesc = new DepthStencilStateDescription
-            {
-                BackFace = new DepthStencilOperationDescription
-                {
-                    FailOperation = StencilOperation.Keep,
-                    PassOperation = StencilOperation.Keep,
-                    DepthFailOperation = StencilOperation.Decrement,
-                    Comparison = Comparison.Always
-                },
-                FrontFace = new DepthStencilOperationDescription
-                {
-                    FailOperation = StencilOperation.Keep,
-                    PassOperation = StencilOperation.Keep,
-                    DepthFailOperation = StencilOperation.Increment,
-                    Comparison = Comparison.Always
-                },
-                IsDepthEnabled = true,
-                DepthWriteMask = DepthWriteMask.All,
-                DepthComparison = Comparison.Less,
-
-                IsStencilEnabled = true,
-                StencilReadMask = 0xFF,
-                StencilWriteMask = 0xFF
-
-            };
-            using (var zBufferTexture = new Texture2D(_device, zBufferTextureDescription))
-            {
-                var depthStencilViewDescription = new DepthStencilViewDescription
-                {
-                    Format = Format.D24_UNorm_S8_UInt,
-                    Dimension = DepthStencilViewDimension.Texture2D,
-                    Texture2D = new DepthStencilViewDescription.Texture2DResource
-                    {
-                        MipSlice = 0
-                    }
-                };
-                _depthStencilView = new DepthStencilView(_device, zBufferTexture, depthStencilViewDescription);
-            }
-
-            var depthStencilState = new DepthStencilState(_device, depthStencilDesc);
-            _deviceContext.OutputMerger.SetDepthStencilState(depthStencilState);
 
             _camera = new Camera();
             _camera.Initialise(initialiseContext);
@@ -149,6 +90,7 @@ namespace PersistentPlanet
         {
             _gameObject?.Dispose();
 
+            _depthStencil?.Dispose();
             _renderTargetView?.Dispose();
             _backBuffer?.Dispose();
             _swapChain?.Dispose();
@@ -178,9 +120,9 @@ namespace PersistentPlanet
 
                 _input.Update(renderContext);
 
-                _deviceContext.OutputMerger.SetRenderTargets(_depthStencilView, _renderTargetView);
+                _deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTargetView);
                 _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
-                _deviceContext.ClearDepthStencilView(_depthStencilView, DepthStencilClearFlags.Depth, 1f, 0);
+                _depthStencil.Apply(renderContext);
 
                 _camera.Apply(renderContext);
 

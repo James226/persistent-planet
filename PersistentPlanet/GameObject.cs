@@ -44,7 +44,6 @@ namespace PersistentPlanet
         public float Nx, Ny, Nz;
     };
 
-
     public class GameObject : IDisposable
     {
         private VertexShader _vertexShader;

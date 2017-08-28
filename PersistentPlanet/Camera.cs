@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using SharpDX;
 using SharpDX.Direct3D11;
-using SharpDX.DirectInput;
 using Buffer = SharpDX.Direct3D11.Buffer;
 
 namespace PersistentPlanet
@@ -25,7 +23,7 @@ namespace PersistentPlanet
 
         public void Initialise(InitialiseContext context)
         {
-            _projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, context.WindowSize.X / context.WindowSize.Y, .5f, 1000f);
+            _projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, context.RenderWindow.WindowWidth / (float)context.RenderWindow.WindowHeight, .5f, 1000f);
             _cameraPosition = new Vector3(150f, 10f, 0);
 
             _viewProjectionBuffer = new Buffer(context.Device,

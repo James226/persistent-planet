@@ -1,5 +1,4 @@
 ﻿using System;
-using MemBus.Support;
 using SharpDX;
 using SharpDX.DirectInput;
 using System.Linq;

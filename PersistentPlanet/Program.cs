@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PersistentPlanet
+﻿namespace PersistentPlanet
 {
     public static class Program
     {
