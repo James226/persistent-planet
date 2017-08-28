@@ -1,0 +1,10 @@
+version: 1.0.{build}
+image: Visual Studio 2017
+build_script:
+- dotnet restore
+- dotnet build -c release
+- dotnet publish -c release -r win7-x64 -o bin/dist/win-x64
+artifacts:
+  - path: PersistentPlanet/bin/dist/win-x64
+    name: PersistentPlanet
+    type: zip
