@@ -2,7 +2,6 @@
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
 namespace PersistentPlanet
@@ -65,9 +64,9 @@ namespace PersistentPlanet
             _objectVsBuffer?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext)
+        public void Apply(IRenderContext renderContext, GameObject gameObject)
         {
-            var worldMatrix = Matrix.Identity;
+            var worldMatrix = gameObject.GetComponent<Transform>().Transformation;
             var light = new LightBufferType
             {
                 ambientColor = new Vector4(0.05f, 0.05f, 0.05f, 1.0f),

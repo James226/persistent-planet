@@ -37,7 +37,7 @@ namespace PersistentPlanet
             _texture?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext)
+        public void Apply(IRenderContext renderContext, GameObject gameObject)
         {
             renderContext.Context.PixelShader.Set(_pixelShader);
             renderContext.Context.PixelShader.SetShaderResource(0, _texture);

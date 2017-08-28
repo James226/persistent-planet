@@ -25,8 +25,9 @@ struct Output
 Output main(Input input)
 {
 	Output output;
-	output.position = mul(input.position, ViewProj);
-	output.position = mul(output.position, WorldMatrix);
+	input.position.w = 1.0f;
+	output.position = mul(input.position, WorldMatrix);
+	output.position = mul(output.position, ViewProj);
 
 	output.tex = input.tex;
 
