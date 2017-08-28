@@ -50,18 +50,45 @@ namespace PersistentPlanet
             XAxis = new Vector2(mouseState.X, mouseState.Y);
 
             _lastMouseState = mouseState;
-            context.Bus.Publish(new XAxisUpdatedEvent { XAxis = XAxis });
+            context.Bus.Publish(new YAxisUpdatedEvent { YAxis = XAxis });
 
             var keyboardState = _keyboard.GetCurrentState();
             if (keyboardState.PressedKeys.Any(k => k == Key.Escape))
             {
                 context.Bus.Publish(new EscapePressedEvent());
             }
+
+            var xAxis = new Vector2();
+            foreach (var key in keyboardState.PressedKeys)
+            {
+                switch (key)
+                {
+                    case Key.W:
+                        xAxis.Y = 1;
+                        break;
+                    case Key.S:
+                        xAxis.Y = -1;
+                        break;
+                    case Key.A:
+                        xAxis.X = -1;
+                        break;
+                    case Key.D:
+                        xAxis.X = 1;
+                        break;
+                }
+            }
+
+            context.Bus.Publish(new XAxisUpdatedEvent {XAxis = xAxis});
         }
     }
 
     public class EscapePressedEvent
     {
+    }
+
+    public class YAxisUpdatedEvent
+    {
+        public Vector2 YAxis { get; set; }
     }
 
     public class XAxisUpdatedEvent

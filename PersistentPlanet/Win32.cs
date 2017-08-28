@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace PersistentPlanet
 {
@@ -196,5 +197,10 @@ namespace PersistentPlanet
         [DllImport("gdi32.dll", CharSet = CharSet.Ansi)]
         public static extern bool TextOut(IntPtr hdc, int nXStart, int nYStart,
             string lpString, int cbString);
+
+        [DllImport("Kernel32.dll")]
+        public static extern bool QueryPerformanceFrequency(out long freq);
+        [DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
+        public static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
     }
 }

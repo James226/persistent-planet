@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DirectInput;
@@ -11,14 +12,16 @@ namespace PersistentPlanet
         Matrix ViewProjection { get; }
     }
 
-    public class Camera : IObserver<XAxisUpdatedEvent>, IDisposable
+    public class Camera : IDisposable
     {
         private Matrix _projectionMatrix;
         private Vector3 _cameraPosition;
         private Buffer _viewProjectionBuffer;
 
+        private Vector3 _velocity = Vector3.Zero;
         private Vector3 _rotation;
         private IDisposable _xAxisSubscription;
+        private IDisposable _yAxisSubscription;
 
         public void Initialise(InitialiseContext context)
         {
@@ -33,21 +36,22 @@ namespace PersistentPlanet
                                                ResourceOptionFlags.None,
                                                0);
 
-            _xAxisSubscription = context.Bus.Subscribe<XAxisUpdatedEvent>(OnNext);
-            
+            _xAxisSubscription = context.Bus.Subscribe<XAxisUpdatedEvent>(OnXAxisUpdated);
+            _yAxisSubscription = context.Bus.Subscribe<YAxisUpdatedEvent>(OnYAxisUpdated);
         }
 
         public void Dispose()
         {
             _viewProjectionBuffer?.Dispose();
+            _yAxisSubscription?.Dispose();
             _xAxisSubscription?.Dispose();
         }
 
         public void Apply(RenderContext context)
         {
-            //if (context.KeyboardState.IsPressed(Key.W))
-            //    _cameraPosition.Z = _cameraPosition.Z + 0.1f;
-
+            const float movementSpeed = 30;
+            _cameraPosition += _velocity * context.DeltaTime * movementSpeed;
+            
             var transform = Matrix3x3.RotationYawPitchRoll(_rotation.Y, _rotation.X, _rotation.Z);
             var lookAt = _cameraPosition + Vector3.Transform(Vector3.ForwardLH, transform);
             var up = Vector3.Transform(Vector3.Up, transform);
@@ -59,17 +63,15 @@ namespace PersistentPlanet
             context.Context.VertexShader.SetConstantBuffer(0, _viewProjectionBuffer);
         }
 
-        public void OnNext(XAxisUpdatedEvent value)
+        public void OnYAxisUpdated(YAxisUpdatedEvent value)
         {
-            _rotation += new Vector3(value.XAxis.Y, value.XAxis.X, 0) * 0.01f;
+            _rotation += new Vector3(value.YAxis.Y, value.YAxis.X, 0) * 0.01f;
         }
 
-        public void OnCompleted()
+        public void OnXAxisUpdated(XAxisUpdatedEvent value)
         {
-        }
-
-        public void OnError(Exception error)
-        {
+            var transform = Matrix3x3.RotationYawPitchRoll(_rotation.Y, _rotation.X, _rotation.Z);
+            _velocity = Vector3.Transform(new Vector3(value.XAxis.X, 0, value.XAxis.Y), transform);
         }
     }
 }

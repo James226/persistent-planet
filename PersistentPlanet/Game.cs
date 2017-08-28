@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using MemBus;
 using MemBus.Configurators;
 using SharpDX;
@@ -162,10 +163,18 @@ namespace PersistentPlanet
             var sw = new Stopwatch();
             sw.Start();
             var frame = 0;
-            var lastFps = 0L;
+
+            Win32.QueryPerformanceFrequency(out long counterFrequency);
+            float ticksPerSecond = counterFrequency;
+
+            Win32.QueryPerformanceCounter(out long lastTimestamp);
+            var lastFps = lastTimestamp;
+
             while (_running && _renderWindow.NextFrame())
             {
-                var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, Input = _input };
+                Win32.QueryPerformanceCounter(out long timestamp);
+
+                var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, Input = _input, DeltaTime = (timestamp - lastTimestamp) / ticksPerSecond };
 
                 _input.Update(renderContext);
 
@@ -181,11 +190,14 @@ namespace PersistentPlanet
 
                 frame++;
 
-                if (sw.ElapsedMilliseconds - lastFps <= 1000) continue;
+                lastTimestamp = timestamp;
+                if (timestamp - lastFps <= counterFrequency) continue;
                 Console.WriteLine(frame);
-                lastFps = sw.ElapsedMilliseconds;
+                lastFps = timestamp;
                 frame = 0;
             }
+
+            sw.Stop();
         }
     }
 }

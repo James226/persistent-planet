@@ -15,5 +15,6 @@ namespace PersistentPlanet
         public DeviceContext Context { get; set; }
         public Input Input { get; set; }
         public IBus Bus { get; set; }
+        public float DeltaTime { get; set; }
     }
 }
