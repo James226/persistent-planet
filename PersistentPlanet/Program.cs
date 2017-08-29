@@ -1,4 +1,7 @@
-﻿namespace PersistentPlanet
+﻿using MemBus;
+using MemBus.Configurators;
+
+namespace PersistentPlanet
 {
     public static class Program
     {
@@ -9,10 +12,12 @@
 
         public static void Main()
         {
-            var renderWindow = new RenderWindow(AppName, ClassName, WindowWidth, WindowHeight);
+            var bus = BusSetup.StartWith<Conservative>().Construct();
+
+            var renderWindow = new RenderWindow(AppName, ClassName, WindowWidth, WindowHeight, bus);
             renderWindow.Create();
 
-            using (var game = new Game(renderWindow))
+            using (var game = new Game(renderWindow, bus))
             {
                 game.Initialise();
                 game.Run();

@@ -201,5 +201,8 @@ namespace PersistentPlanet
         public static extern bool QueryPerformanceFrequency(out long freq);
         [DllImport("kernel32.dll")]
         public static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetActiveWindow();
     }
 }

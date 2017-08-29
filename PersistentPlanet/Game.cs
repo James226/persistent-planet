@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using MemBus;
 using MemBus.Configurators;
+using PersistentPlanet.Controls;
 using PersistentPlanet.Primitives;
 using SharpDX;
 using SharpDX.Direct3D;
@@ -29,15 +30,15 @@ namespace PersistentPlanet
         private DepthStencil _depthStencil;
         private GameObject _terrain;
 
-        public Game(IRenderWindow renderWindow)
+        public Game(IRenderWindow renderWindow, IBus bus)
         {
             _renderWindow = renderWindow;
+            _bus = bus;
         }
 
         public void Initialise()
         {
             _running = true;
-            _bus = BusSetup.StartWith<Conservative>().Construct();
             _bus.Subscribe<EscapePressedEvent>(_ => _running = false);
 
             var backBufferDesc = new ModeDescription(_renderWindow.WindowWidth,
@@ -79,7 +80,7 @@ namespace PersistentPlanet
             _depthStencil = new DepthStencil();
             _depthStencil.Initialise(initialiseContext);
 
-            _input = new Input();
+            _input = new Input(_bus);
             _input.Initialise(initialiseContext);
 
             _cube = new GameObject();

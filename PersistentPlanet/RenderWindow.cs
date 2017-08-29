@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using MemBus;
+using PersistentPlanet.Controls;
 
 namespace PersistentPlanet
 {
@@ -15,16 +17,19 @@ namespace PersistentPlanet
     {
         private readonly string _appName;
         private readonly string _className;
+        private readonly IBus _bus;
         private Win32.WNDCLASSEX _windowClass;
+        private bool _hasFocus;
         public int WindowWidth { get; }
         public int WindowHeight { get; }
 
         public IntPtr Handle { get; private set; }
 
-        public RenderWindow(string appName, string className, int windowWidth, int windowHeight)
+        public RenderWindow(string appName, string className, int windowWidth, int windowHeight, IBus bus)
         {
             _appName = appName;
             _className = className;
+            _bus = bus;
             WindowWidth = windowWidth;
             WindowHeight = windowHeight;
         }
@@ -36,8 +41,15 @@ namespace PersistentPlanet
 
         public bool NextFrame()
         {
-            if (Win32.GetMessage(out Win32.MSG msg, Handle, 0, 0) < 0) return false;
+            var hasFocus = Win32.GetActiveWindow() == Handle;
 
+            if (hasFocus != _hasFocus)
+            {
+                _bus.Publish(new WindowFocusChangedEvent {HasFocus = hasFocus});
+                _hasFocus = hasFocus;
+            }
+
+            if (Win32.GetMessage(out Win32.MSG msg, Handle, 0, 0) < 0) return false;
             Win32.TranslateMessage(ref msg);
             Win32.DispatchMessage(ref msg);
             return msg.message != 130;
