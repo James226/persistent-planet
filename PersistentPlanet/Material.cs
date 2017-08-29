@@ -1,19 +1,33 @@
 ﻿using System;
-using SharpDX.Direct3D;
+using MemBus;
 
 namespace PersistentPlanet
 {
     public class Material : IDisposable
     {
-        private PixelShader _pixelShader;
-        private VertexShader _vertexShader;
+        private IShader _pixelShader;
+        private IShader _vertexShader;
+        private readonly IBus _objectBus;
+        private readonly Func<string, string, IShader> _pixelShaderFactory;
+        private readonly Func<string, string, IShader> _vertexShaderFactory;
+
+        public Material(IBus objectBus)
+            : this((file, func) => new PixelShader(file, func), (file, func) => new VertexShader(objectBus, file, func))
+        {
+        }
+
+        public Material(Func<string, string, IShader> pixelShaderFactory, Func<string, string, IShader> vertexShaderFactory)
+        {
+            _pixelShaderFactory = pixelShaderFactory;
+            _vertexShaderFactory = vertexShaderFactory;
+        }
 
         public void Initialise(InitialiseContext context)
         {
-            _pixelShader = new PixelShader("pixelShader.hlsl", "main");
+            _pixelShader = _pixelShaderFactory.Invoke("pixelShader.hlsl", "main");
             _pixelShader.Initialise(context);
 
-            _vertexShader = new VertexShader("vertexShader.hlsl", "main");
+            _vertexShader = _vertexShaderFactory.Invoke("vertexShader.hlsl", "main");
             _vertexShader.Initialise(context);
         }
 
@@ -23,11 +37,10 @@ namespace PersistentPlanet
             _pixelShader.Dispose();
         }
 
-        public void Render(RenderContext context, GameObject gameObject)
+        public void Render(IRenderContext context)
         {
-            _vertexShader.Apply(context, gameObject);
-            _pixelShader.Apply(context, gameObject);
-            context.Context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
+            _vertexShader.Apply(context);
+            _pixelShader.Apply(context);
         }
     }
 }

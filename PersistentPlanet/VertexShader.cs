@@ -1,4 +1,5 @@
-﻿using SharpDX;
+﻿using MemBus;
+using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -8,6 +9,7 @@ namespace PersistentPlanet
 {
     public class VertexShader : IShader
     {
+        private readonly IBus _objectBus;
         private readonly string _filename;
         private readonly string _function;
         private SharpDX.Direct3D11.VertexShader _vertexShader;
@@ -15,15 +17,19 @@ namespace PersistentPlanet
         private InputLayout _inputLayout;
         private Buffer _lightBuffer;
         private Buffer _objectVsBuffer;
+        private Matrix _worldMatrix = Matrix.Identity;
 
-        public VertexShader(string filename, string function)
+        public VertexShader(IBus objectBus, string filename, string function)
         {
+            _objectBus = objectBus;
             _filename = filename;
             _function = function;
         }
 
         public void Initialise(IInitialiseContext context)
         {
+            _objectBus.Subscribe<WorldMatrixUpdatedEvent>(e => _worldMatrix = e.WorldMatrix);
+            
             using (var vertexShaderByteCode =
                 ShaderBytecode.CompileFromFile(_filename, _function, "vs_4_0", ShaderFlags.Debug))
             {
@@ -64,9 +70,8 @@ namespace PersistentPlanet
             _objectVsBuffer?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext, GameObject gameObject)
+        public void Apply(IRenderContext renderContext)
         {
-            var worldMatrix = gameObject.GetComponent<Transform>().Transformation;
             var light = new LightBufferType
             {
                 ambientColor = new Vector4(0.05f, 0.05f, 0.05f, 1.0f),
@@ -74,7 +79,7 @@ namespace PersistentPlanet
                 lightDirection = new Vector3(0.2f, -0.2f, 0.2f)
             };
             renderContext.Context.UpdateSubresource(ref light, _lightBuffer);
-            renderContext.Context.UpdateSubresource(ref worldMatrix, _objectVsBuffer);
+            renderContext.Context.UpdateSubresource(ref _worldMatrix, _objectVsBuffer);
 
             renderContext.Context.VertexShader.Set(_vertexShader);
             renderContext.Context.VertexShader.SetConstantBuffer(1, _objectVsBuffer);

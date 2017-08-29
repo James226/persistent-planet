@@ -1,4 +1,5 @@
-﻿using SharpDX.D3DCompiler;
+﻿using MemBus;
+using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
 namespace PersistentPlanet
@@ -37,7 +38,7 @@ namespace PersistentPlanet
             _texture?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext, GameObject gameObject)
+        public void Apply(IRenderContext renderContext)
         {
             renderContext.Context.PixelShader.Set(_pixelShader);
             renderContext.Context.PixelShader.SetShaderResource(0, _texture);

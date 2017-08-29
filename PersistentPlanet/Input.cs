@@ -94,4 +94,9 @@ namespace PersistentPlanet
     {
         public Vector2 XAxis { get; set; }
     }
+
+    public class WorldMatrixUpdatedEvent
+    {
+        public Matrix WorldMatrix { get; set; }
+    }
 }

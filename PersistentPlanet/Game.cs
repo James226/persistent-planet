@@ -106,15 +106,15 @@ namespace PersistentPlanet
             sw.Start();
             var frame = 0;
 
-            Win32.QueryPerformanceFrequency(out long counterFrequency);
+            Win32.QueryPerformanceFrequency(out var counterFrequency);
             float ticksPerSecond = counterFrequency;
 
-            Win32.QueryPerformanceCounter(out long lastTimestamp);
+            Win32.QueryPerformanceCounter(out var lastTimestamp);
             var lastFps = lastTimestamp;
 
             while (_running && _renderWindow.NextFrame())
             {
-                Win32.QueryPerformanceCounter(out long timestamp);
+                Win32.QueryPerformanceCounter(out var timestamp);
 
                 var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, Input = _input, DeltaTime = (timestamp - lastTimestamp) / ticksPerSecond };
 
@@ -123,6 +123,7 @@ namespace PersistentPlanet
                 _deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTargetView);
                 _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
                 _depthStencil.Apply(renderContext);
+                _deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
                 _camera.Apply(renderContext);
 

@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Runtime.InteropServices;
+using MemBus;
+using MemBus.Configurators;
 using SharpDX;
-using SharpDX.Direct3D;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
 using Buffer = SharpDX.Direct3D11.Buffer;
-using Device = SharpDX.Direct3D11.Device;
 using Vector4 = System.Numerics.Vector4;
 
 namespace PersistentPlanet
@@ -47,13 +42,8 @@ namespace PersistentPlanet
 
     public class GameObject : IDisposable
     {
-        private VertexShader _vertexShader;
-        private PixelShader _pixelShader;
-        private Buffer _vertexBuffer;
-        private uint[] _indices;
-        private Buffer _indexBuffer;
-        private HeightMapType[] _heightmap;
         private readonly ConcurrentDictionary<Type, IComponent> _components = new ConcurrentDictionary<Type, IComponent>();
+        private readonly IBus _objectBus;
 
         public void AddComponent<T>(T component) where T : IComponent
         {
@@ -65,12 +55,15 @@ namespace PersistentPlanet
             return (T) (_components.TryGetValue(typeof(T), out IComponent component) ? component : null);
         }
 
+        public GameObject()
+        {
+            _objectBus = BusSetup.StartWith<Conservative>().Construct();
+        }
+
         public void Initialise(InitialiseContext initialiseContext)
         {
-            AddComponent(new Transform {Position = new Vector3(0, 0, -100)});
-            AddComponent(new Terrain.Terrain());
-
-            
+            AddComponent(new Transform(_objectBus) {Position = new Vector3(0, 0, -100)});
+            AddComponent(new Terrain.Terrain(_objectBus));
 
             foreach (var component in _components)
             {
@@ -80,8 +73,6 @@ namespace PersistentPlanet
 
         public void Dispose()
         {
-            
-
             foreach (var component in _components)
             {
                 component.Value?.Dispose();
@@ -90,8 +81,6 @@ namespace PersistentPlanet
 
         public void Render(IRenderContext renderContext)
         {
-            
-
             foreach (var component in _components)
             {
                 component.Value.Render(renderContext);

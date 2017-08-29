@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Linq;
-using System.Text;
+using MemBus;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -11,14 +10,22 @@ namespace PersistentPlanet.Terrain
 {
     public class Terrain : IComponent
     {
+        private readonly IBus _objectBus;
         private Buffer _vertexBuffer;
         private uint[] _indices;
         private Buffer _indexBuffer;
+        private Material _material;
+
+        public Terrain(IBus objectBus)
+        {
+            _objectBus = objectBus;
+        }
 
         public void Initialise(InitialiseContext context)
         {
+            _material = new Material(_objectBus);
+            _material.Initialise(context);
             GenerateBuffers(context.Device);
-
         }
 
         private void GenerateBuffers(Device device)
@@ -91,9 +98,9 @@ namespace PersistentPlanet.Terrain
                     AddIndex(index2); // Bottom right.
                 }
 
-                _vertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
+                _vertexBuffer = Buffer.Create(device, BindFlags.VertexBuffer, vertices);
                 _indices = indices.ToArray();
-                _indexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, _indices);
+                _indexBuffer = Buffer.Create(device, BindFlags.IndexBuffer, _indices);
             }
         }
 
@@ -255,12 +262,14 @@ namespace PersistentPlanet.Terrain
 
         public void Dispose()
         {
+            _material?.Dispose();
             _vertexBuffer.Dispose();
             _indexBuffer.Dispose();
         }
 
         public void Render(IRenderContext context)
         {
+            _material.Render(context);
             context.Context.InputAssembler.SetVertexBuffers(0,
                                                             new VertexBufferBinding(
                                                                 _vertexBuffer,
