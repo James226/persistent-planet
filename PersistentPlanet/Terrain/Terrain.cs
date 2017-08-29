@@ -10,20 +10,16 @@ namespace PersistentPlanet.Terrain
 {
     public class Terrain : IComponent
     {
-        private readonly IBus _objectBus;
+        public IBus ObjectBus { get; set; }
+
         private Buffer _vertexBuffer;
         private uint[] _indices;
         private Buffer _indexBuffer;
         private Material _material;
 
-        public Terrain(IBus objectBus)
-        {
-            _objectBus = objectBus;
-        }
-
         public void Initialise(InitialiseContext context)
         {
-            _material = new Material(_objectBus);
+            _material = new Material(ObjectBus);
             _material.Initialise(context);
             GenerateBuffers(context.Device);
         }

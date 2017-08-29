@@ -1,3 +1,4 @@
+using System;
 using MemBus;
 using SharpDX;
 
@@ -5,7 +6,7 @@ namespace PersistentPlanet
 {
     public class Transform : IComponent
     {
-        private readonly IBus _objectBus;
+        public IBus ObjectBus { get; set; }
 
         public Vector3 Position
         {
@@ -45,18 +46,12 @@ namespace PersistentPlanet
 
         private bool _isDirty = true;
 
-        public Transform(IBus objectBus)
-        {
-            _objectBus = objectBus;
-        }
-
         public void Initialise(InitialiseContext context)
         {
         }
 
         public void Dispose()
         {
-            
         }
 
         public void Render(IRenderContext context)
@@ -74,7 +69,7 @@ namespace PersistentPlanet
                                                _rotation,
                                                _position);
             _transform.Transpose();
-            _objectBus.Publish(new WorldMatrixUpdatedEvent {WorldMatrix = _transform});
+            ObjectBus.Publish(new WorldMatrixUpdatedEvent {WorldMatrix = _transform});
         }
     }
 }

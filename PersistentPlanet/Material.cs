@@ -7,7 +7,6 @@ namespace PersistentPlanet
     {
         private IShader _pixelShader;
         private IShader _vertexShader;
-        private readonly IBus _objectBus;
         private readonly Func<string, string, IShader> _pixelShaderFactory;
         private readonly Func<string, string, IShader> _vertexShaderFactory;
 

@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using MemBus;
 using MemBus.Configurators;
+using PersistentPlanet.Primitives;
+using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -19,12 +21,13 @@ namespace PersistentPlanet
         private RenderTargetView _renderTargetView;
         private Device _device;
         private DeviceContext _deviceContext;
-        private GameObject _gameObject;
+        private GameObject _cube;
         private Camera _camera;
         private Input _input;
         private IBus _bus;
         private bool _running;
         private DepthStencil _depthStencil;
+        private GameObject _terrain;
 
         public Game(IRenderWindow renderWindow)
         {
@@ -79,8 +82,14 @@ namespace PersistentPlanet
             _input = new Input();
             _input.Initialise(initialiseContext);
 
-            _gameObject = new GameObject();
-            _gameObject.Initialise(initialiseContext);
+            _cube = new GameObject();
+            _cube.AddComponent<Cube>();
+            _cube.GetComponent<Transform>().Position = new Vector3(110, 7, 30);
+            _cube.Initialise(initialiseContext);
+
+            _terrain = new GameObject();
+            _terrain.AddComponent<Terrain.Terrain>();
+            _terrain.Initialise(initialiseContext);
 
             _camera = new Camera();
             _camera.Initialise(initialiseContext);
@@ -88,7 +97,8 @@ namespace PersistentPlanet
 
         public void Dispose()
         {
-            _gameObject?.Dispose();
+            _terrain?.Dispose();
+            _cube?.Dispose();
 
             _depthStencil?.Dispose();
             _renderTargetView?.Dispose();
@@ -127,7 +137,8 @@ namespace PersistentPlanet
 
                 _camera.Apply(renderContext);
 
-                _gameObject.Render(renderContext);
+                _cube.Render(renderContext);
+                _terrain.Render(renderContext);
 
                 _swapChain.Present(1, PresentFlags.None);
 
