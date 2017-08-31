@@ -7,14 +7,23 @@ namespace PersistentPlanet
 {
     public class RenderTexture : IDisposable
     {
+        private readonly IRenderWindow _renderWindow;
+        public RenderTargetView View => _renderTargetView;
+        public Texture2D Texture => _texture;
+
         private Texture2D _texture;
         private RenderTargetView _renderTargetView;
         private ShaderResourceView _shaderResourceView;
 
+        public RenderTexture(IRenderWindow renderWindow)
+        {
+            _renderWindow = renderWindow;
+        }
+
         public void Initialise(InitialiseContext context)
         {
-            int width = 800;
-            int height = 600;
+            int width = _renderWindow.WindowWidth;
+            int height = _renderWindow.WindowHeight;
 
             var textureDescription = new Texture2DDescription
             {
@@ -64,7 +73,7 @@ namespace PersistentPlanet
 
         public void Apply(RenderContext context)
         {
-            //context.Context.OutputMerger.SetRenderTargets(_);
+            context.Context.OutputMerger.SetRenderTargets(_renderTargetView);
         }
     }
 }

@@ -1,22 +1,23 @@
-﻿using SharpDX.D3DCompiler;
+﻿using MemBus;
+using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
 namespace PersistentPlanet
 {
-    public class PixelShader : IShader
+    public class TexturePixelShader : IShader
     {
         private readonly string _filename;
         private readonly string _function;
-        private readonly Texture2D _texture2D;
 
         private SharpDX.Direct3D11.PixelShader _pixelShader;
         private ShaderResourceView _texture;
+        private Texture2D _texture2d;
 
-        public PixelShader(string filename, string function, Texture2D texture2d)
+        public TexturePixelShader(string filename, string function, Texture2D texture = null)
         {
             _filename = filename;
             _function = function;
-            _texture2D = texture2d;
+            _texture2d = texture;
         }
 
         public void Initialise(IInitialiseContext context)
@@ -26,7 +27,18 @@ namespace PersistentPlanet
                 _pixelShader = new SharpDX.Direct3D11.PixelShader(context.Device, byteCode);
             }
 
-            _texture = new ShaderResourceView(context.Device, _texture2D);
+            if (_texture2d == null)
+            {
+                using (var bitmap = TextureLoader.LoadBitmap(new SharpDX.WIC.ImagingFactory2(), "sand.jpg"))
+                using (var texture = TextureLoader.CreateTexture2DFromBitmap(context.Device, bitmap))
+                {
+                    _texture = new ShaderResourceView(context.Device, texture);
+                }
+            }
+            else
+            {
+                _texture = new ShaderResourceView(context.Device, _texture2d);
+            }
         }
 
         public void Dispose()

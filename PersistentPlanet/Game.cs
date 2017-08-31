@@ -29,6 +29,8 @@ namespace PersistentPlanet
         private bool _running;
         private DepthStencil _depthStencil;
         private GameObject _terrain;
+        private Material _fullscreenMaterial;
+        private RenderTexture _renderTexture;
 
         public Game(IRenderWindow renderWindow, IBus bus)
         {
@@ -62,6 +64,7 @@ namespace PersistentPlanet
             _backBuffer = _swapChain.GetBackBuffer<Texture2D>(0);
             _renderTargetView = new RenderTargetView(_device, _backBuffer);
 
+
             _deviceContext.Rasterizer.SetViewport(new RawViewportF
             {
                 Height = _renderWindow.WindowHeight,
@@ -76,6 +79,10 @@ namespace PersistentPlanet
                 RenderWindow = _renderWindow,
                 Bus = _bus
             };
+
+            _renderTexture = new RenderTexture(_renderWindow);
+            _renderTexture.Initialise(initialiseContext);
+
 
             _depthStencil = new DepthStencil();
             _depthStencil.Initialise(initialiseContext);
@@ -94,6 +101,13 @@ namespace PersistentPlanet
 
             _camera = new Camera();
             _camera.Initialise(initialiseContext);
+
+            _fullscreenMaterial = new Material((file, func) => new PixelShader(file, func, _renderTexture.Texture), (file, func) => new BasicVertexShader(file, func));
+            _fullscreenMaterial.PixelShaderFilename = "fullscreen-quad.hlsl";
+            _fullscreenMaterial.PixelShaderFunction = "PS";
+            _fullscreenMaterial.VertexShaderFilename = "fullscreen-quad.hlsl";
+            _fullscreenMaterial.VertexShaderFunction = "VS";
+            _fullscreenMaterial.Initialise(initialiseContext);
         }
 
         public void Dispose()
@@ -102,6 +116,7 @@ namespace PersistentPlanet
             _cube?.Dispose();
 
             _depthStencil?.Dispose();
+            _renderTexture?.Dispose();
             _renderTargetView?.Dispose();
             _backBuffer?.Dispose();
             _swapChain?.Dispose();
@@ -131,8 +146,10 @@ namespace PersistentPlanet
 
                 _input.Update(renderContext);
 
-                _deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTargetView);
-                _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
+                _deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTexture.View);
+                _deviceContext.ClearRenderTargetView(_renderTexture.View, new RawColor4(.2f, .5f, .5f, 1f));
+                //_deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTargetView);
+                //_deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
                 _depthStencil.Apply(renderContext);
                 _deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
@@ -140,6 +157,13 @@ namespace PersistentPlanet
 
                 _cube.Render(renderContext);
                 _terrain.Render(renderContext);
+
+                _deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
+                _deviceContext.OutputMerger.SetRenderTargets(_renderTargetView);
+                _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(0, 0, 0, 1f));
+
+                _fullscreenMaterial.Render(renderContext);
+                _deviceContext.Draw(4, 0);
 
                 _swapChain.Present(1, PresentFlags.None);
 

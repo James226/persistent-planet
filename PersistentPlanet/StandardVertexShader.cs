@@ -8,7 +8,7 @@ using Vector4 = System.Numerics.Vector4;
 
 namespace PersistentPlanet
 {
-    public class VertexShader : IShader
+    public class StandardVertexShader : IShader
     {
         private readonly IBus _objectBus;
         private readonly string _filename;
@@ -20,7 +20,7 @@ namespace PersistentPlanet
         private Buffer _objectVsBuffer;
         private Matrix _worldMatrix = Matrix.Identity;
 
-        public VertexShader(IBus objectBus, string filename, string function)
+        public StandardVertexShader(IBus objectBus, string filename, string function)
         {
             _objectBus = objectBus;
             _filename = filename;
