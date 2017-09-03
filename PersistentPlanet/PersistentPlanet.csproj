@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="fullscreen-quad.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="heightmap.bmp">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
