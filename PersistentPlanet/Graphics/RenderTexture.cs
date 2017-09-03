@@ -3,7 +3,7 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     public class RenderTexture : IDisposable
     {

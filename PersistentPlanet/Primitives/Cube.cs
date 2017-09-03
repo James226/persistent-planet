@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
 using MemBus;
+using PersistentPlanet.Graphics;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;

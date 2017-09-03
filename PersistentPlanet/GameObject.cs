@@ -2,8 +2,7 @@
 using System.Collections.Concurrent;
 using MemBus;
 using MemBus.Configurators;
-using PersistentPlanet.Primitives;
-using SharpDX;
+using PersistentPlanet.Graphics;
 
 namespace PersistentPlanet
 {
@@ -33,7 +32,7 @@ namespace PersistentPlanet
         {
             _objectBus = BusSetup.StartWith<Conservative>().Construct();
 
-            AddComponent<Transform>();
+            AddComponent<Transform.Transform>();
         }
 
         public void Initialise(InitialiseContext initialiseContext)

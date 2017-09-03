@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using MemBus;
-using MemBus.Configurators;
 using PersistentPlanet.Controls;
+using PersistentPlanet.Graphics;
 using PersistentPlanet.Primitives;
 using SharpDX;
 using SharpDX.Direct3D;
@@ -10,12 +10,14 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using SharpDX.Mathematics.Interop;
 using Device = SharpDX.Direct3D11.Device;
+using PixelShader = PersistentPlanet.Graphics.PixelShader;
 
 namespace PersistentPlanet
 {
     public class Game : IDisposable
     {
         private readonly IRenderWindow _renderWindow;
+        private readonly IBus _bus;
         private SwapChain _swapChain;
 
         private Texture2D _backBuffer;
@@ -25,7 +27,6 @@ namespace PersistentPlanet
         private GameObject _cube;
         private Camera _camera;
         private Input _input;
-        private IBus _bus;
         private bool _running;
         private DepthStencil _depthStencil;
         private GameObject _terrain;
@@ -92,8 +93,9 @@ namespace PersistentPlanet
 
             _cube = new GameObject();
             _cube.AddComponent<Cube>();
-            _cube.GetComponent<Transform>().Position = new Vector3(110, 7, 30);
+            _cube.AddComponent<CubeController>();
             _cube.Initialise(initialiseContext);
+            _cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
             _terrain = new GameObject();
             _terrain.AddComponent<Terrain.Terrain>();
@@ -102,11 +104,14 @@ namespace PersistentPlanet
             _camera = new Camera();
             _camera.Initialise(initialiseContext);
 
-            _fullscreenMaterial = new Material((file, func) => new PixelShader(file, func, _renderTexture.Texture), (file, func) => new BasicVertexShader(file, func));
-            _fullscreenMaterial.PixelShaderFilename = "fullscreen-quad.hlsl";
-            _fullscreenMaterial.PixelShaderFunction = "PS";
-            _fullscreenMaterial.VertexShaderFilename = "fullscreen-quad.hlsl";
-            _fullscreenMaterial.VertexShaderFunction = "VS";
+            _fullscreenMaterial = new Material((file, func) => new PixelShader(file, func, _renderTexture.Texture),
+                (file, func) => new BasicVertexShader(file, func))
+            {
+                PixelShaderFilename = "fullscreen-quad.hlsl",
+                PixelShaderFunction = "PS",
+                VertexShaderFilename = "fullscreen-quad.hlsl",
+                VertexShaderFunction = "VS"
+            };
             _fullscreenMaterial.Initialise(initialiseContext);
         }
 

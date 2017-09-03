@@ -1,6 +1,7 @@
 ﻿using System;
 using MemBus;
 using Moq;
+using PersistentPlanet.Graphics;
 using Xunit;
 
 namespace PersistentPlanet.Tests

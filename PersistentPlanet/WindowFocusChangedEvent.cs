@@ -1,4 +1,4 @@
-namespace PersistentPlanet.Controls
+namespace PersistentPlanet
 {
     public class WindowFocusChangedEvent
     {

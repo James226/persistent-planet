@@ -1,12 +1,11 @@
 ﻿using MemBus;
-using PersistentPlanet.Controls;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Vector4 = System.Numerics.Vector4;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     public class StandardVertexShader : IShader
     {

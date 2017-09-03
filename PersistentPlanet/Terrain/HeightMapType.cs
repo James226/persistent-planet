@@ -1,4 +1,4 @@
-﻿namespace PersistentPlanet
+﻿namespace PersistentPlanet.Terrain
 {
     public struct HeightMapType
     {

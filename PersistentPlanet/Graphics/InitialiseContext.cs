@@ -1,7 +1,7 @@
 ﻿using MemBus;
 using SharpDX.Direct3D11;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     public interface IInitialiseContext
     {

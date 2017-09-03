@@ -1,6 +1,6 @@
 using SharpDX;
 
-namespace PersistentPlanet.Controls
+namespace PersistentPlanet
 {
     public class WorldMatrixUpdatedEvent
     {

@@ -1,9 +1,9 @@
 using System;
 using MemBus;
-using PersistentPlanet.Controls;
+using PersistentPlanet.Graphics;
 using SharpDX;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Transform
 {
     public class Transform : IComponent
     {
@@ -17,10 +17,10 @@ namespace PersistentPlanet
                 if (_position == value) return;
                 _position = value;
                 _isDirty = true;
+                ObjectBus.Publish(new PositionChangedEvent { Position = _position });
             }
         }
         private Vector3 _position;
-
 
         public Quaternion Rotation
         {
@@ -46,13 +46,16 @@ namespace PersistentPlanet
         private Matrix _transform = Matrix.Identity;
 
         private bool _isDirty = true;
+        private IDisposable _requestPositionUpdatedSubscription;
 
         public void Initialise(InitialiseContext context)
         {
+            _requestPositionUpdatedSubscription = ObjectBus.Subscribe<RequestPositionUpdateEvent>(e => Position = e.Position);
         }
 
         public void Dispose()
         {
+            _requestPositionUpdatedSubscription?.Dispose();
         }
 
         public void Render(IRenderContext context)

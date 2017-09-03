@@ -1,7 +1,6 @@
-﻿using System;
-using MemBus;
+using System;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     public interface IShader : IDisposable
     {

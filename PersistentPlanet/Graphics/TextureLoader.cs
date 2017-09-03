@@ -1,4 +1,4 @@
-﻿namespace PersistentPlanet
+﻿namespace PersistentPlanet.Graphics
 {
     public class TextureLoader
     {

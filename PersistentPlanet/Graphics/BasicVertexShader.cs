@@ -1,7 +1,7 @@
 ﻿using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     public class BasicVertexShader : IShader
     {

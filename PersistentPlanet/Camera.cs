@@ -1,5 +1,6 @@
 ﻿using System;
 using PersistentPlanet.Controls;
+using PersistentPlanet.Graphics;
 using SharpDX;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;

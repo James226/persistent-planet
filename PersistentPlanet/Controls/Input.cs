@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Linq;
 using MemBus;
+using PersistentPlanet.Graphics;
 using SharpDX;
 using SharpDX.DirectInput;
 
 namespace PersistentPlanet.Controls
 {
-    public interface IInput
-    {
-        Vector2 XAxis { get; }
-    }
-
-    public class Input : IInput, IDisposable
+    public class Input : IDisposable
     {
         private readonly IBus _bus;
-        public Vector2 XAxis { get; private set; }
 
         private DirectInput _input;
         private Keyboard _keyboard;
@@ -74,10 +69,10 @@ namespace PersistentPlanet.Controls
 
                 var mouseState = _mouse.GetCurrentState();
                 _lastMouseState = _lastMouseState ?? mouseState;
-                XAxis = new Vector2(mouseState.X, mouseState.Y);
+                var yAxis = new Vector2(mouseState.X, mouseState.Y);
 
                 _lastMouseState = mouseState;
-                context.Bus.Publish(new YAxisUpdatedEvent {YAxis = XAxis});
+                context.Bus.Publish(new YAxisUpdatedEvent {YAxis = yAxis});
 
                 var keyboardState = _keyboard.GetCurrentState();
                 if (keyboardState.PressedKeys.Any(k => k == Key.Escape))
@@ -105,6 +100,27 @@ namespace PersistentPlanet.Controls
                     }
                 }
                 context.Bus.Publish(new XAxisUpdatedEvent { XAxis = xAxis });
+
+                var zAxis = new Vector2();
+                foreach (var key in keyboardState.PressedKeys)
+                {
+                    switch (key)
+                    {
+                        case Key.Up:
+                            zAxis.Y = 1;
+                            break;
+                        case Key.Down:
+                            zAxis.Y = -1;
+                            break;
+                        case Key.Left:
+                            zAxis.X = -1;
+                            break;
+                        case Key.Right:
+                            zAxis.X = 1;
+                            break;
+                    }
+                }
+                context.Bus.Publish(new ZAxisUpdatedEvent { ZAxis = zAxis });
             }
             catch (SharpDXException e)
             {

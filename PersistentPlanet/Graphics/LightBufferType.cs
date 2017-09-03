@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using Vector3 = SharpDX.Vector3;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct LightBufferType

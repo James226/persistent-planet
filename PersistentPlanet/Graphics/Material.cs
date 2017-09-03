@@ -1,7 +1,7 @@
 ﻿using System;
 using MemBus;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     public class Material : IDisposable
     {
