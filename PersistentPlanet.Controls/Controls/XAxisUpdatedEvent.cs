@@ -1,6 +1,6 @@
-using SharpDX;
+using System.Numerics;
 
-namespace PersistentPlanet.Controls
+namespace PersistentPlanet.Controls.Controls
 {
     public class XAxisUpdatedEvent
     {

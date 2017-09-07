@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PersistentPlanet.Window\PersistentPlanet.Window.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="fullscreen-quad.hlsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

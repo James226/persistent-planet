@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using MemBus;
 using PersistentPlanet.Controls;
+using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Primitives;
 using SharpDX;
@@ -26,7 +27,7 @@ namespace PersistentPlanet
         private DeviceContext _deviceContext;
         private GameObject _cube;
         private Camera _camera;
-        private Input _input;
+        //private Input _input;
         private bool _running;
         private DepthStencil _depthStencil;
         private GameObject _terrain;
@@ -88,8 +89,8 @@ namespace PersistentPlanet
             _depthStencil = new DepthStencil();
             _depthStencil.Initialise(initialiseContext);
 
-            _input = new Input(_bus);
-            _input.Initialise(initialiseContext);
+            //_input = new Input(_bus);
+            //_input.Initialise(initialiseContext);
 
             _cube = new GameObject();
             _cube.AddComponent<Cube>();
@@ -125,7 +126,7 @@ namespace PersistentPlanet
             _renderTargetView?.Dispose();
             _backBuffer?.Dispose();
             _swapChain?.Dispose();
-            _input?.Dispose();
+            //_input?.Dispose();
             _device?.Dispose();
             _deviceContext?.Dispose();
             _bus?.Dispose();
@@ -147,9 +148,9 @@ namespace PersistentPlanet
             {
                 Win32.QueryPerformanceCounter(out var timestamp);
 
-                var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, Input = _input, DeltaTime = (timestamp - lastTimestamp) / ticksPerSecond };
+                var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, DeltaTime = (timestamp - lastTimestamp) / ticksPerSecond };
 
-                _input.Update(renderContext);
+                //_input.Update(renderContext);
 
                 _deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTexture.View);
                 _deviceContext.ClearRenderTargetView(_renderTexture.View, new RawColor4(.2f, .5f, .5f, 1f));

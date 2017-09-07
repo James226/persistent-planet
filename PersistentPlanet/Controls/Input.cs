@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Linq;
 using MemBus;
+using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
 using SharpDX;
 using SharpDX.DirectInput;
+using Vector2 = System.Numerics.Vector2;
 
 namespace PersistentPlanet.Controls
 {
@@ -69,7 +71,7 @@ namespace PersistentPlanet.Controls
 
                 var mouseState = _mouse.GetCurrentState();
                 _lastMouseState = _lastMouseState ?? mouseState;
-                var yAxis = new Vector2(mouseState.X, mouseState.Y);
+                var yAxis = new System.Numerics.Vector2(mouseState.X, mouseState.Y);
 
                 _lastMouseState = mouseState;
                 context.Bus.Publish(new YAxisUpdatedEvent {YAxis = yAxis});
@@ -80,7 +82,7 @@ namespace PersistentPlanet.Controls
                     context.Bus.Publish(new EscapePressedEvent());
                 }
 
-                var xAxis = new Vector2();
+                var xAxis = new System.Numerics.Vector2();
                 foreach (var key in keyboardState.PressedKeys)
                 {
                     switch (key)

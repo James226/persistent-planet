@@ -14,7 +14,8 @@ namespace PersistentPlanet
         {
             var bus = BusSetup.StartWith<Conservative>().Construct();
 
-            var renderWindow = new RenderWindow(AppName, ClassName, WindowWidth, WindowHeight, bus);
+            //var renderWindow = new RenderWindow(AppName, ClassName, WindowWidth, WindowHeight, bus);
+            var renderWindow = new SdlWindow(AppName, ClassName, WindowWidth, WindowHeight, bus);
             renderWindow.Create();
 
             using (var game = new Game(renderWindow, bus))
