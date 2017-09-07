@@ -26,7 +26,6 @@ namespace PersistentPlanet
         private DeviceContext _deviceContext;
         private GameObject _cube;
         private Camera _camera;
-        //private Input _input;
         private bool _running;
         private DepthStencil _depthStencil;
         private GameObject _terrain;

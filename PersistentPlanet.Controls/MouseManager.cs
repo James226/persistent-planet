@@ -7,13 +7,11 @@ namespace PersistentPlanet.Controls
     public class MouseManager
     {
         private readonly IPublisher _publisher;
-        private Vector2 _xAxis;
 
         public MouseManager(IPublisher publisher)
         {
             _publisher = publisher;
         }
-
 
         public void Move(int x, int y)
         {
