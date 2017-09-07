@@ -1,10 +1,10 @@
 ﻿using System;
-using PersistentPlanet.Controls;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
 using SharpDX;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
+using Vector2 = System.Numerics.Vector2;
 
 namespace PersistentPlanet
 {
@@ -23,6 +23,7 @@ namespace PersistentPlanet
         private Vector3 _rotation;
         private IDisposable _xAxisSubscription;
         private IDisposable _yAxisSubscription;
+        private Vector2 _lastXAxis;
 
         public void Initialise(InitialiseContext context)
         {
@@ -66,13 +67,20 @@ namespace PersistentPlanet
 
         public void OnYAxisUpdated(YAxisUpdatedEvent value)
         {
-            _rotation += new Vector3(value.YAxis.Y, value.YAxis.X, 0) * 0.01f;
+            _rotation += new Vector3(value.Axis.Y, value.Axis.X, 0) * 0.01f;
+            UpdateVelocity();
         }
 
         public void OnXAxisUpdated(XAxisUpdatedEvent value)
         {
+            _lastXAxis = value.Axis;
+            UpdateVelocity();
+        }
+
+        private void UpdateVelocity()
+        {
             var transform = Matrix3x3.RotationYawPitchRoll(_rotation.Y, _rotation.X, _rotation.Z);
-            _velocity = Vector3.Transform(new Vector3(value.XAxis.X, 0, value.XAxis.Y), transform);
+            _velocity = Vector3.Transform(new Vector3(_lastXAxis.X, 0, _lastXAxis.Y), transform);
         }
     }
 }

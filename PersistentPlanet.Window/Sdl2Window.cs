@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MemBus;
 using PersistentPlanet.Controls;
 using PersistentPlanet.Primitives;
 using PersistentPlanet.Primitives.Platform;
@@ -26,6 +24,7 @@ namespace PersistentPlanet.Window
         private readonly bool _threadedProcessing;
 
         private readonly KeyboardManager _keyboardManager;
+        private readonly MouseManager _mouseManager;
 
         private bool _shouldClose;
         public bool LimitPollRate { get; set; }
@@ -36,10 +35,12 @@ namespace PersistentPlanet.Window
         private int _currentMouseY;
         private bool[] _currentMouseButtonStates = new bool[13];
 
-        public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags, bool threadedProcessing, KeyboardManager keyboardManager)
+        public Sdl2Window(string title, int x, int y, int width, int height, SDL_WindowFlags flags,
+            bool threadedProcessing, KeyboardManager keyboardManager, MouseManager mouseManager)
         {
             _threadedProcessing = threadedProcessing;
             _keyboardManager = keyboardManager;
+            _mouseManager = mouseManager;
             if (threadedProcessing)
             {
                 using (var mre = new ManualResetEvent(false))
@@ -156,6 +157,12 @@ namespace PersistentPlanet.Window
         public bool Focused => (Sdl2Native.SDL_GetWindowFlags(_window) & SDL_WindowFlags.InputFocus) != 0;
 
         public IntPtr SdlWindowHandle => _window;
+
+        public bool RelativeMouseMode
+        {
+            get => Sdl2Native.SDL_GetRelativeMouseMode();
+            set => Sdl2Native.SDL_SetRelativeMouseMode(value ? SDL_Bool.True : SDL_Bool.False);
+        }
 
         public event Action Resized;
         public event Action Closing;
@@ -434,6 +441,7 @@ namespace PersistentPlanet.Window
             _currentMouseX = (int)mousePos.X;
             _currentMouseY = (int)mousePos.Y;
             _privateSnapshot.MousePosition = mousePos;
+            _mouseManager.Move(mouseMotionEvent.xrel, mouseMotionEvent.yrel);
             MouseMove?.Invoke(new MouseMoveEventArgs(GetCurrentMouseState(), mousePos));
         }
 

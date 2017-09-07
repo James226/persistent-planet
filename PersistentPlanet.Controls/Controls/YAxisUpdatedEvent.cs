@@ -2,8 +2,8 @@ using System.Numerics;
 
 namespace PersistentPlanet.Controls.Controls
 {
-    public class YAxisUpdatedEvent
+    public class YAxisUpdatedEvent : IAxisUpdatedEvent
     {
-        public Vector2 YAxis { get; set; }
+        public Vector2 Axis { get; set; }
     }
 }

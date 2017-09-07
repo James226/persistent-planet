@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 using MemBus;
 using PersistentPlanet.Controls;
-using PersistentPlanet.Primitives.Platform;
 using PersistentPlanet.Window;
 
 namespace PersistentPlanet
@@ -135,10 +134,12 @@ namespace PersistentPlanet
                 WindowHeight,
                 SDL_WindowFlags.Resizable | SDL_WindowFlags.OpenGL,
                 RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-                new KeyboardManager(_bus))
+                new KeyboardManager(_bus),
+                new MouseManager(_bus))
             {
                 CursorVisible = false
             };
+            _window.RelativeMouseMode = true;
             //_window.WindowState = WindowState.BorderlessFullScreen;
         }
 

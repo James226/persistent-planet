@@ -64,11 +64,17 @@ namespace PersistentPlanet.Window
         private static SDL_HideWindow_t s_hideWindow = LoadFunction<SDL_HideWindow_t>("SDL_HideWindow");
         public static void SDL_HideWindow(SDL_Window window) => s_hideWindow(window);
 
-        private delegate SDL_ShowCursorMode SDL_ShowCursor_t(SDL_ShowCursorMode window);
+        private delegate SDL_ShowCursorMode SDL_ShowCursor_t(SDL_ShowCursorMode showCursorMode);
         private static SDL_ShowCursor_t s_showCursor = LoadFunction<SDL_ShowCursor_t>("SDL_ShowCursor");
         public static SDL_ShowCursorMode SDL_ShowCursor(SDL_ShowCursorMode window) => s_showCursor(window);
 
+        private delegate int SDL_SetRelativeMouseMode_t(SDL_Bool enabled);
+        private static SDL_SetRelativeMouseMode_t s_setRelativeMouseMode = LoadFunction<SDL_SetRelativeMouseMode_t>("SDL_SetRelativeMouseMode");
+        public static bool SDL_SetRelativeMouseMode(SDL_Bool window) => s_setRelativeMouseMode(window) == 0;
 
+        private delegate SDL_Bool SDL_GetRelativeMouseMode_t();
+        private static SDL_GetRelativeMouseMode_t s_getRelativeMouseMode = LoadFunction<SDL_GetRelativeMouseMode_t>("SDL_GetRelativeMouseMode");
+        public static bool SDL_GetRelativeMouseMode() => s_getRelativeMouseMode() == SDL_Bool.True;
     }
 
     [Flags]
@@ -165,5 +171,11 @@ namespace PersistentPlanet.Window
         Query = -1,
         Disable = 0x00000000,
         Enable = 0x00000001,
+    }
+
+    public enum SDL_Bool : uint
+    {
+        False = 0,
+        True = 1
     }
 }

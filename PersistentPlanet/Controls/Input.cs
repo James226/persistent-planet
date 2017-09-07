@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Linq;
 using MemBus;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
 using SharpDX;
 using SharpDX.DirectInput;
 using Vector2 = System.Numerics.Vector2;
+using System.Linq;
 
 namespace PersistentPlanet.Controls
 {
@@ -71,10 +71,10 @@ namespace PersistentPlanet.Controls
 
                 var mouseState = _mouse.GetCurrentState();
                 _lastMouseState = _lastMouseState ?? mouseState;
-                var yAxis = new System.Numerics.Vector2(mouseState.X, mouseState.Y);
+                var yAxis = new Vector2(mouseState.X, mouseState.Y);
 
                 _lastMouseState = mouseState;
-                context.Bus.Publish(new YAxisUpdatedEvent {YAxis = yAxis});
+                context.Bus.Publish(new YAxisUpdatedEvent {Axis = yAxis});
 
                 var keyboardState = _keyboard.GetCurrentState();
                 if (keyboardState.PressedKeys.Any(k => k == Key.Escape))
@@ -82,7 +82,7 @@ namespace PersistentPlanet.Controls
                     context.Bus.Publish(new EscapePressedEvent());
                 }
 
-                var xAxis = new System.Numerics.Vector2();
+                var xAxis = new Vector2();
                 foreach (var key in keyboardState.PressedKeys)
                 {
                     switch (key)
@@ -101,7 +101,7 @@ namespace PersistentPlanet.Controls
                             break;
                     }
                 }
-                context.Bus.Publish(new XAxisUpdatedEvent { XAxis = xAxis });
+                context.Bus.Publish(new XAxisUpdatedEvent { Axis = xAxis });
 
                 var zAxis = new Vector2();
                 foreach (var key in keyboardState.PressedKeys)
@@ -122,7 +122,7 @@ namespace PersistentPlanet.Controls
                             break;
                     }
                 }
-                context.Bus.Publish(new ZAxisUpdatedEvent { ZAxis = zAxis });
+                context.Bus.Publish(new ZAxisUpdatedEvent { Axis = zAxis });
             }
             catch (SharpDXException e)
             {

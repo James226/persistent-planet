@@ -1,6 +1,5 @@
 ﻿using System;
 using MemBus;
-using PersistentPlanet.Controls;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Transform;
@@ -23,7 +22,7 @@ namespace PersistentPlanet
             {
                 ObjectBus.Publish(new RequestPositionUpdateEvent
                 {
-                    Position = _position + new Vector3(e.ZAxis.X, 0, e.ZAxis.Y)
+                    Position = _position + new Vector3(e.Axis.X, 0, e.Axis.Y)
                 });
             });
         }
