@@ -1,7 +1,7 @@
 ﻿using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
-namespace PersistentPlanet.Graphics
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class BasicVertexShader : IShader
     {
@@ -15,7 +15,7 @@ namespace PersistentPlanet.Graphics
             _function = function;
         }
 
-        public void Initialise(IInitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             using (var vertexShaderByteCode =
                 ShaderBytecode.CompileFromFile(_filename, _function, "vs_4_0", ShaderFlags.Debug))
@@ -29,7 +29,7 @@ namespace PersistentPlanet.Graphics
             _vertexShader?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext)
+        public void Apply(D11RenderContext renderContext)
         {
             renderContext.Context.VertexShader.Set(_vertexShader);
         }

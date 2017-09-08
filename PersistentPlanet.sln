@@ -11,9 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Window", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Primitives", "PersistentPlanet.Primitives\PersistentPlanet.Primitives.csproj", "{89F231B3-C95C-476A-A9EE-10EB6DBB7C81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Controls", "PersistentPlanet.Controls\PersistentPlanet.Controls.csproj", "{84D53042-5A11-4810-BB55-A61BF8B2B447}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Controls", "PersistentPlanet.Controls\PersistentPlanet.Controls.csproj", "{84D53042-5A11-4810-BB55-A61BF8B2B447}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Controls.Tests", "PersistentPlanet.Controls.Tests\PersistentPlanet.Controls.Tests.csproj", "{AE85B95D-46A4-4E2D-864A-B460B2D00F35}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Controls.Tests", "PersistentPlanet.Controls.Tests\PersistentPlanet.Controls.Tests.csproj", "{AE85B95D-46A4-4E2D-864A-B460B2D00F35}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Graphics", "PersistentPlanet.Graphics\PersistentPlanet.Graphics.csproj", "{020FCB7C-88A8-4AF1-A187-ED0490390517}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Graphics.DirectX11", "PersistentPlanet.Graphics.DirectX11\PersistentPlanet.Graphics.DirectX11.csproj", "{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,14 @@ Global
 		{AE85B95D-46A4-4E2D-864A-B460B2D00F35}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE85B95D-46A4-4E2D-864A-B460B2D00F35}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE85B95D-46A4-4E2D-864A-B460B2D00F35}.Release|Any CPU.Build.0 = Release|Any CPU
+		{020FCB7C-88A8-4AF1-A187-ED0490390517}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{020FCB7C-88A8-4AF1-A187-ED0490390517}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{020FCB7C-88A8-4AF1-A187-ED0490390517}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{020FCB7C-88A8-4AF1-A187-ED0490390517}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

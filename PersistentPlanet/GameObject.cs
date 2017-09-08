@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using MemBus;
 using MemBus.Configurators;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.DirectX11;
 
 namespace PersistentPlanet
 {
@@ -35,7 +36,7 @@ namespace PersistentPlanet
             AddComponent<Transform.Transform>();
         }
 
-        public void Initialise(InitialiseContext initialiseContext)
+        public void Initialise(D11InitialiseContext initialiseContext)
         {
             foreach (var component in _components)
             {
@@ -51,7 +52,7 @@ namespace PersistentPlanet
             }
         }
 
-        public void Render(IRenderContext renderContext)
+        public void Render(D11RenderContext renderContext)
         {
             foreach (var component in _components)
             {

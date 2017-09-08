@@ -3,14 +3,9 @@ using System.Diagnostics;
 using MemBus;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.DirectX11;
 using PersistentPlanet.Primitives;
 using SharpDX;
-using SharpDX.Direct3D;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
-using SharpDX.Mathematics.Interop;
-using Device = SharpDX.Direct3D11.Device;
-using PixelShader = PersistentPlanet.Graphics.PixelShader;
 
 namespace PersistentPlanet
 {
@@ -18,19 +13,13 @@ namespace PersistentPlanet
     {
         private readonly IRenderWindow _renderWindow;
         private readonly IBus _bus;
-        private SwapChain _swapChain;
 
-        private Texture2D _backBuffer;
-        private RenderTargetView _renderTargetView;
-        private Device _device;
-        private DeviceContext _deviceContext;
         private GameObject _cube;
         private Camera _camera;
         private bool _running;
-        private DepthStencil _depthStencil;
         private GameObject _terrain;
-        private Material _fullscreenMaterial;
-        private RenderTexture _renderTexture;
+        private D11Renderer _renderer;
+        private Func<D11RenderContext> _renderContextGenerator;
 
         public Game(IRenderWindow renderWindow, IBus bus)
         {
@@ -43,52 +32,9 @@ namespace PersistentPlanet
             _running = true;
             _bus.Subscribe<EscapePressedEvent>(_ => _running = false);
 
-            var backBufferDesc = new ModeDescription(_renderWindow.WindowWidth,
-                                                     _renderWindow.WindowHeight,
-                                                     new Rational(60, 1),
-                                                     Format.R8G8B8A8_UNorm);
-
-            var swapChainDesc = new SwapChainDescription
-            {
-                ModeDescription = backBufferDesc,
-                SampleDescription = new SampleDescription(1, 0),
-                Usage = Usage.RenderTargetOutput,
-                BufferCount = 1,
-                OutputHandle = _renderWindow.Handle,
-                IsWindowed = true
-            };
-
-            Device.CreateWithSwapChain(DriverType.Hardware, DeviceCreationFlags.None, swapChainDesc, out _device, out _swapChain);
-            _deviceContext = _device.ImmediateContext;
-
-            _backBuffer = _swapChain.GetBackBuffer<Texture2D>(0);
-            _renderTargetView = new RenderTargetView(_device, _backBuffer);
-
-
-            _deviceContext.Rasterizer.SetViewport(new RawViewportF
-            {
-                Height = _renderWindow.WindowHeight,
-                Width = _renderWindow.WindowWidth,
-                MinDepth = 0,
-                MaxDepth = 1
-            });
-
-            var initialiseContext = new InitialiseContext
-            {
-                Device = _device,
-                RenderWindow = _renderWindow,
-                Bus = _bus
-            };
-
-            _renderTexture = new RenderTexture(_renderWindow);
-            _renderTexture.Initialise(initialiseContext);
-
-
-            _depthStencil = new DepthStencil();
-            _depthStencil.Initialise(initialiseContext);
-
-            //_input = new Input(_bus);
-            //_input.Initialise(initialiseContext);
+            _renderer = new D11Renderer();
+            (var initialiseContext, var renderContextGenerator) = _renderer.Initialise(_renderWindow, _bus);
+            _renderContextGenerator = renderContextGenerator;
 
             _cube = new GameObject();
             _cube.AddComponent<Cube>();
@@ -102,16 +48,6 @@ namespace PersistentPlanet
 
             _camera = new Camera();
             _camera.Initialise(initialiseContext);
-
-            _fullscreenMaterial = new Material((file, func) => new PixelShader(file, func, _renderTexture.Texture),
-                (file, func) => new BasicVertexShader(file, func))
-            {
-                PixelShaderFilename = "fullscreen-quad.hlsl",
-                PixelShaderFunction = "PS",
-                VertexShaderFilename = "fullscreen-quad.hlsl",
-                VertexShaderFunction = "VS"
-            };
-            _fullscreenMaterial.Initialise(initialiseContext);
         }
 
         public void Dispose()
@@ -119,14 +55,6 @@ namespace PersistentPlanet
             _terrain?.Dispose();
             _cube?.Dispose();
 
-            _depthStencil?.Dispose();
-            _renderTexture?.Dispose();
-            _renderTargetView?.Dispose();
-            _backBuffer?.Dispose();
-            _swapChain?.Dispose();
-            //_input?.Dispose();
-            _device?.Dispose();
-            _deviceContext?.Dispose();
             _bus?.Dispose();
         }
 
@@ -137,7 +65,6 @@ namespace PersistentPlanet
             var frame = 0;
 
             Win32.QueryPerformanceFrequency(out var counterFrequency);
-            float ticksPerSecond = counterFrequency;
 
             Win32.QueryPerformanceCounter(out var lastTimestamp);
             var lastFps = lastTimestamp;
@@ -146,34 +73,18 @@ namespace PersistentPlanet
             {
                 Win32.QueryPerformanceCounter(out var timestamp);
 
-                var renderContext = new RenderContext { Context = _deviceContext, Bus = _bus, DeltaTime = (timestamp - lastTimestamp) / ticksPerSecond };
+                var renderContext = _renderContextGenerator.Invoke();
 
-                //_input.Update(renderContext);
+                _renderer.Render(renderContext, () =>
+                {
+                    _camera.Apply(renderContext);
 
-                _deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTexture.View);
-                _deviceContext.ClearRenderTargetView(_renderTexture.View, new RawColor4(.2f, .5f, .5f, 1f));
-                //_deviceContext.OutputMerger.SetRenderTargets(_depthStencil.View, _renderTargetView);
-                //_deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(.2f, .5f, .5f, 1f));
-                _depthStencil.Apply(renderContext);
-                _deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-
-                _camera.Apply(renderContext);
-
-                _cube.Render(renderContext);
-                _terrain.Render(renderContext);
-
-                _deviceContext.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleStrip;
-                _deviceContext.OutputMerger.SetRenderTargets(_renderTargetView);
-                _deviceContext.ClearRenderTargetView(_renderTargetView, new RawColor4(0, 0, 0, 1f));
-
-                _fullscreenMaterial.Render(renderContext);
-                _deviceContext.Draw(4, 0);
-
-                _swapChain.Present(1, PresentFlags.None);
+                    _cube.Render(renderContext);
+                    _terrain.Render(renderContext);
+                });
 
                 frame++;
 
-                lastTimestamp = timestamp;
                 if (timestamp - lastFps <= counterFrequency) continue;
                 Console.WriteLine(frame);
                 lastFps = timestamp;

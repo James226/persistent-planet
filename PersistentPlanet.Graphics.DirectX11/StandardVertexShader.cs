@@ -5,7 +5,7 @@ using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 using Vector4 = System.Numerics.Vector4;
 
-namespace PersistentPlanet.Graphics
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class StandardVertexShader : IShader
     {
@@ -26,7 +26,7 @@ namespace PersistentPlanet.Graphics
             _function = function;
         }
 
-        public void Initialise(IInitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             _objectBus.Subscribe<WorldMatrixUpdatedEvent>(e => _worldMatrix = e.WorldMatrix);
             
@@ -70,7 +70,7 @@ namespace PersistentPlanet.Graphics
             _objectVsBuffer?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext)
+        public void Apply(D11RenderContext renderContext)
         {
             var light = new LightBufferType
             {

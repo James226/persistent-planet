@@ -17,9 +17,12 @@
     <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
     <PackageReference Include="SharpDX.Mathematics" Version="4.0.1" />
     <PackageReference Include="SharpDX.XInput" Version="4.0.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PersistentPlanet.Graphics.DirectX11\PersistentPlanet.Graphics.DirectX11.csproj" />
+    <ProjectReference Include="..\PersistentPlanet.Graphics\PersistentPlanet.Graphics.csproj" />
     <ProjectReference Include="..\PersistentPlanet.Window\PersistentPlanet.Window.csproj" />
   </ItemGroup>
 
@@ -39,6 +42,10 @@
     <None Update="vertexShader.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Graphics\" />
   </ItemGroup>
 
 </Project>

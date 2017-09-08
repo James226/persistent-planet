@@ -2,6 +2,7 @@
 using MemBus;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.DirectX11;
 using PersistentPlanet.Transform;
 using SharpDX;
 
@@ -15,7 +16,7 @@ namespace PersistentPlanet
         private IDisposable _positionChangedSubscription;
         private IDisposable _zAxisUpdatedSubscription;
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             _positionChangedSubscription = ObjectBus.Subscribe<PositionChangedEvent>(e => _position = e.Position);
             _zAxisUpdatedSubscription = context.Bus.Subscribe<ZAxisUpdatedEvent>(e =>
@@ -33,7 +34,7 @@ namespace PersistentPlanet
             _zAxisUpdatedSubscription?.Dispose();
         }
 
-        public void Render(IRenderContext context)
+        public void Render(D11RenderContext context)
         {
         }
     }

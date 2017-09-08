@@ -1,7 +1,7 @@
 ﻿using System;
 using MemBus;
 
-namespace PersistentPlanet.Graphics
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class Material : IDisposable
     {
@@ -26,7 +26,7 @@ namespace PersistentPlanet.Graphics
             _vertexShaderFactory = vertexShaderFactory;
         }
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             _pixelShader = _pixelShaderFactory.Invoke(PixelShaderFilename, PixelShaderFunction);
             _pixelShader.Initialise(context);
@@ -41,7 +41,7 @@ namespace PersistentPlanet.Graphics
             _pixelShader.Dispose();
         }
 
-        public void Render(IRenderContext context)
+        public void Render(D11RenderContext context)
         {
             _vertexShader.Apply(context);
             _pixelShader.Apply(context);

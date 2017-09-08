@@ -10,10 +10,11 @@ namespace PersistentPlanet.Controls
         void KeyUp(Key key);
         void KeyDown(Key key);
     }
+
     public class KeyboardAxisManager<T> : IKeyboardAxisManager where T : IAxisUpdatedEvent, new()
     {
         private readonly IPublisher _publisher;
-        private Vector2 _xAxis;
+        private Vector2 _axis;
         private readonly Key _up;
         private readonly Key _down;
         private readonly Key _left;
@@ -33,8 +34,8 @@ namespace PersistentPlanet.Controls
             var value = GetAxisValue(key);
             if (value == Vector2.Zero) return;
 
-            _xAxis -= value;
-            _publisher.Publish(new T { Axis = _xAxis });
+            _axis -= value;
+            _publisher.Publish(new T { Axis = _axis });
         }
 
         public void KeyDown(Key key)
@@ -42,8 +43,8 @@ namespace PersistentPlanet.Controls
             var value = GetAxisValue(key);
             if (value == Vector2.Zero) return;
 
-            _xAxis += value;
-            _publisher.Publish(new T { Axis = _xAxis });
+            _axis += value;
+            _publisher.Publish(new T { Axis = _axis });
         }
 
         private Vector2 GetAxisValue(Key key)

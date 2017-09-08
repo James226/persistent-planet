@@ -1,6 +1,6 @@
 using SharpDX;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class WorldMatrixUpdatedEvent
     {

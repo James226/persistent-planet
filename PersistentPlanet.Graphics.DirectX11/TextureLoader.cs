@@ -1,4 +1,4 @@
-﻿namespace PersistentPlanet.Graphics
+﻿namespace PersistentPlanet.Graphics.DirectX11
 {
     public class TextureLoader
     {

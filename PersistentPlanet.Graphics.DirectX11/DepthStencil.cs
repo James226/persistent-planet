@@ -2,7 +2,7 @@
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
-namespace PersistentPlanet.Graphics
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class DepthStencil : IDisposable
     {

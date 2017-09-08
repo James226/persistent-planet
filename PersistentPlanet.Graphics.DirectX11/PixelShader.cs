@@ -1,7 +1,7 @@
 ﻿using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 
-namespace PersistentPlanet.Graphics
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class PixelShader : IShader
     {
@@ -19,7 +19,7 @@ namespace PersistentPlanet.Graphics
             _texture2D = texture2d;
         }
 
-        public void Initialise(IInitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             using (var byteCode = ShaderBytecode.CompileFromFile(_filename, _function, "ps_4_0", ShaderFlags.Debug))
             {
@@ -35,7 +35,7 @@ namespace PersistentPlanet.Graphics
             _texture?.Dispose();
         }
 
-        public void Apply(IRenderContext renderContext)
+        public void Apply(D11RenderContext renderContext)
         {
             renderContext.Context.PixelShader.Set(_pixelShader);
             renderContext.Context.PixelShader.SetShaderResource(0, _texture);

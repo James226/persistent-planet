@@ -3,27 +3,29 @@ using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
 
-namespace PersistentPlanet.Graphics
+namespace PersistentPlanet.Graphics.DirectX11
 {
     public class RenderTexture : IDisposable
     {
-        private readonly IRenderWindow _renderWindow;
         public RenderTargetView View => _renderTargetView;
         public Texture2D Texture => _texture;
 
         private Texture2D _texture;
         private RenderTargetView _renderTargetView;
         private ShaderResourceView _shaderResourceView;
+        private int _width;
+        private int _height;
 
-        public RenderTexture(IRenderWindow renderWindow)
+        public RenderTexture(int width, int height)
         {
-            _renderWindow = renderWindow;
+            _width = width;
+            _height = height;
         }
 
         public void Initialise(InitialiseContext context)
         {
-            int width = _renderWindow.WindowWidth;
-            int height = _renderWindow.WindowHeight;
+            int width = _width;
+            int height = _height;
 
             var textureDescription = new Texture2DDescription
             {
@@ -73,7 +75,7 @@ namespace PersistentPlanet.Graphics
 
         public void Apply(RenderContext context)
         {
-            context.Context.OutputMerger.SetRenderTargets(_renderTargetView);
+            context.Context.OutputMerger.SetRenderTargets((RenderTargetView) _renderTargetView);
         }
     }
 }

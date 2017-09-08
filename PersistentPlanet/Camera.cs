@@ -8,11 +8,6 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace PersistentPlanet
 {
-    public interface ICamera
-    {
-        Matrix ViewProjection { get; }
-    }
-
     public class Camera : IDisposable
     {
         private Matrix _projectionMatrix;
@@ -49,7 +44,7 @@ namespace PersistentPlanet
             _xAxisSubscription?.Dispose();
         }
 
-        public void Apply(RenderContext context)
+        public void Apply(Graphics.RenderContext context)
         {
             const float movementSpeed = 30;
             _cameraPosition += _velocity * context.DeltaTime * movementSpeed;
@@ -65,13 +60,13 @@ namespace PersistentPlanet
             context.Context.VertexShader.SetConstantBuffer(0, _viewProjectionBuffer);
         }
 
-        public void OnYAxisUpdated(YAxisUpdatedEvent value)
+        private void OnYAxisUpdated(YAxisUpdatedEvent value)
         {
             _rotation += new Vector3(value.Axis.Y, value.Axis.X, 0) * 0.01f;
             UpdateVelocity();
         }
 
-        public void OnXAxisUpdated(XAxisUpdatedEvent value)
+        private void OnXAxisUpdated(XAxisUpdatedEvent value)
         {
             _lastXAxis = value.Axis;
             UpdateVelocity();

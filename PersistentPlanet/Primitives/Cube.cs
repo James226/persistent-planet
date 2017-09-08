@@ -1,6 +1,7 @@
 ﻿using System;
 using MemBus;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.DirectX11;
 using SharpDX;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
@@ -19,7 +20,7 @@ namespace PersistentPlanet.Primitives
         private Material _material;
         private int _bufferSize;
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             _material = new Material(ObjectBus);
             _material.Initialise(context);
@@ -82,7 +83,7 @@ namespace PersistentPlanet.Primitives
             _material.Dispose();
         }
 
-        public void Render(IRenderContext context)
+        public void Render(D11RenderContext context)
         {
             _material.Render(context);
             context.Context.InputAssembler.SetVertexBuffers(0,

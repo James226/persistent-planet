@@ -1,6 +1,7 @@
 using System;
 using MemBus;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.DirectX11;
 using SharpDX;
 
 namespace PersistentPlanet.Transform
@@ -48,7 +49,7 @@ namespace PersistentPlanet.Transform
         private bool _isDirty = true;
         private IDisposable _requestPositionUpdatedSubscription;
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             _requestPositionUpdatedSubscription = ObjectBus.Subscribe<RequestPositionUpdateEvent>(e => Position = e.Position);
         }
@@ -58,7 +59,7 @@ namespace PersistentPlanet.Transform
             _requestPositionUpdatedSubscription?.Dispose();
         }
 
-        public void Render(IRenderContext context)
+        public void Render(D11RenderContext context)
         {
             RecalculateTransform();
         }
