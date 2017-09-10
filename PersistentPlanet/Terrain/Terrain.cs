@@ -19,7 +19,7 @@ namespace PersistentPlanet.Terrain
         private Buffer _indexBuffer;
         private Material _material;
 
-        public void Initialise(D11InitialiseContext context)
+        public void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection)
         {
             _material = new Material(ObjectBus);
             _material.Initialise(context);

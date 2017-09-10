@@ -8,7 +8,7 @@ namespace PersistentPlanet
     public interface IComponent : IDisposable
     {
         IBus ObjectBus { get; set; }
-        void Initialise(D11InitialiseContext context);
+        void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection);
         void Render(D11RenderContext context);
     }
 }

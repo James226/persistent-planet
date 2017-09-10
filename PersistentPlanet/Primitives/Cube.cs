@@ -15,15 +15,15 @@ namespace PersistentPlanet.Primitives
     {
         public IBus ObjectBus { get; set; }
 
-        private Buffer _vertexBuffer;
-        private Buffer _indexBuffer;
-        private Material _material;
+        private IMesh _mesh;
+        private IMaterial _material;
         private int _bufferSize;
 
-        public void Initialise(D11InitialiseContext context)
+        public void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection)
         {
-            _material = new Material(ObjectBus);
-            _material.Initialise(context);
+            //_material = new Material(ObjectBus);
+            //_material.Initialise(context);
+
 
             var height = 5 * .5f;
             var width = 5 * .5f;
@@ -72,29 +72,18 @@ namespace PersistentPlanet.Primitives
 
             _bufferSize = indices.Length;
 
-            _vertexBuffer = Buffer.Create(context.Device, BindFlags.VertexBuffer, vertices);
-            _indexBuffer = Buffer.Create(context.Device, BindFlags.IndexBuffer, indices);
+            _material = resourceCollection.CreateMaterial(ObjectBus);
+            _mesh = resourceCollection.CreateMesh(vertices, indices);
         }
 
         public void Dispose()
         {
-            _indexBuffer.Dispose();
-            _vertexBuffer.Dispose();
-            _material.Dispose();
+            //_material.Dispose();
         }
 
         public void Render(D11RenderContext context)
         {
-            _material.Render(context);
-            context.Context.InputAssembler.SetVertexBuffers(0,
-                                                            new VertexBufferBinding(
-                                                                _vertexBuffer,
-                                                                Utilities.SizeOf<Vertex>(),
-                                                                0));
-
-            context.Context.InputAssembler.SetIndexBuffer(_indexBuffer, Format.R32_UInt, 0);
-
-            context.Context.DrawIndexed(_bufferSize, 0, 0);
+            //_material.Render(context);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace PersistentPlanet.Graphics
         where TInitialiseContext : IInitialiseContext 
         where TRenderContext : IRenderContext
     {
-        IGenericShader<TInitialiseContext, TRenderContext> CreateShader();
+        Scene<TRenderContext> CreateScene();
 
         (TInitialiseContext, Func<TRenderContext>) Initialise(IRenderWindow renderWindow, IBus bus);
         void Render(TRenderContext context, Action render);

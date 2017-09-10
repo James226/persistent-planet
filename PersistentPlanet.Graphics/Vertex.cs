@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using SharpDX;
 
-namespace PersistentPlanet
+namespace PersistentPlanet.Graphics
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct Vertex

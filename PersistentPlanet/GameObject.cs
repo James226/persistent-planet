@@ -11,6 +11,7 @@ namespace PersistentPlanet
     {
         private readonly ConcurrentDictionary<Type, IComponent> _components = new ConcurrentDictionary<Type, IComponent>();
         private readonly IBus _objectBus;
+        private IResourceCollection _resourceCollection;
 
         public void AddComponent<T>() where T : IComponent, new()
         {
@@ -26,21 +27,22 @@ namespace PersistentPlanet
 
         public T GetComponent<T>() where T : IComponent
         {
-            return (T) (_components.TryGetValue(typeof(T), out IComponent component) ? component : null);
+            return (T) (_components.TryGetValue(typeof(T), out var component) ? component : null);
         }
 
         public GameObject()
         {
             _objectBus = BusSetup.StartWith<Conservative>().Construct();
-
+            
             AddComponent<Transform.Transform>();
         }
 
-        public void Initialise(D11InitialiseContext initialiseContext)
+        public void Initialise(D11InitialiseContext initialiseContext, IScene scene)
         {
+            _resourceCollection = scene.CreateResourceCollection();
             foreach (var component in _components)
             {
-                component.Value.Initialise(initialiseContext);
+                component.Value.Initialise(initialiseContext, _resourceCollection);
             }
         }
 

@@ -44,7 +44,7 @@ namespace PersistentPlanet
             _xAxisSubscription?.Dispose();
         }
 
-        public void Apply(Graphics.RenderContext context)
+        public void Apply(RenderContext context)
         {
             const float movementSpeed = 30;
             _cameraPosition += _velocity * context.DeltaTime * movementSpeed;

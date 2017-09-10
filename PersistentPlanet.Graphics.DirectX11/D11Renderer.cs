@@ -18,10 +18,11 @@ namespace PersistentPlanet.Graphics.DirectX11
         private RenderTexture _renderTexture;
         private DepthStencil _depthStencil;
         private Material _fullscreenMaterial;
+        private D11ResourceFactory _resourceFactory;
 
-        public IGenericShader<D11InitialiseContext, D11RenderContext> CreateShader()
+        public Scene<D11RenderContext> CreateScene()
         {
-            return null;
+            return new Scene<D11RenderContext>(_resourceFactory);
         }
 
         public (D11InitialiseContext, Func<D11RenderContext>) Initialise(IRenderWindow renderWindow, IBus bus)
@@ -58,9 +59,12 @@ namespace PersistentPlanet.Graphics.DirectX11
             var initialiseContext = new D11InitialiseContext
             {
                 Device = _device,
+                DeviceContext = _deviceContext,
                 RenderWindow = renderWindow,
                 Bus = bus
             };
+
+            _resourceFactory = new D11ResourceFactory(initialiseContext);
 
             _renderTexture = new RenderTexture(renderWindow.WindowWidth, renderWindow.WindowHeight);
             _renderTexture.Initialise(initialiseContext);

@@ -12,7 +12,7 @@ namespace PersistentPlanet.Graphics.DirectX11
         private readonly IBus _objectBus;
         private readonly string _filename;
         private readonly string _function;
-        private SharpDX.Direct3D11.VertexShader _vertexShader;
+        private VertexShader _vertexShader;
         private byte[] _inputSignature;
         private InputLayout _inputLayout;
         private Buffer _lightBuffer;
@@ -33,7 +33,7 @@ namespace PersistentPlanet.Graphics.DirectX11
             using (var vertexShaderByteCode =
                 ShaderBytecode.CompileFromFile(_filename, _function, "vs_4_0", ShaderFlags.Debug))
             {
-                _vertexShader = new SharpDX.Direct3D11.VertexShader(context.Device, vertexShaderByteCode);
+                _vertexShader = new VertexShader(context.Device, vertexShaderByteCode);
 
                 InputElement[] inputElements =
                 {
@@ -70,6 +70,11 @@ namespace PersistentPlanet.Graphics.DirectX11
             _objectVsBuffer?.Dispose();
         }
 
+        public void Render(D11RenderContext renderContext)
+        {
+            Apply(renderContext);
+        }
+
         public void Apply(D11RenderContext renderContext)
         {
             var light = new LightBufferType
@@ -86,6 +91,11 @@ namespace PersistentPlanet.Graphics.DirectX11
             renderContext.Context.PixelShader.SetConstantBuffer(0, _lightBuffer);
 
             renderContext.Context.InputAssembler.InputLayout = _inputLayout;
+        }
+
+        public void SetBuffer()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

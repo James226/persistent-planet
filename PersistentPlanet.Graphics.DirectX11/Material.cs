@@ -3,7 +3,7 @@ using MemBus;
 
 namespace PersistentPlanet.Graphics.DirectX11
 {
-    public class Material : IDisposable
+    public class Material : IMaterial<D11RenderContext>, IDisposable
     {
         public string PixelShaderFilename { get; set; } = "pixelShader.hlsl";
         public string PixelShaderFunction { get; set; } = "main";
