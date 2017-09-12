@@ -10,11 +10,17 @@ namespace PersistentPlanet.Graphics.DirectX11
         private Buffer _indexBuffer;
         private Buffer _vertexBuffer;
 
-        public void Initialise(D11InitialiseContext context, Vertex[] vertices, int[] indices)
+        public void Initialise(D11InitialiseContext context, Vertex[] vertices, uint[] indices)
         {
             _size = indices.Length;
             _vertexBuffer = Buffer.Create(context.Device, BindFlags.VertexBuffer, vertices);
             _indexBuffer = Buffer.Create(context.Device, BindFlags.IndexBuffer, indices);
+        }
+
+        public void Dispose()
+        {
+            _indexBuffer?.Dispose();
+            _vertexBuffer?.Dispose();
         }
 
         public void Render(D11RenderContext renderContext)

@@ -53,13 +53,5 @@ namespace PersistentPlanet
                 component.Value?.Dispose();
             }
         }
-
-        public void Render(D11RenderContext renderContext)
-        {
-            foreach (var component in _components)
-            {
-                component.Value.Render(renderContext);
-            }
-        }
     }
 }

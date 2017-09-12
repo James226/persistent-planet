@@ -16,7 +16,7 @@ namespace PersistentPlanet
         private IDisposable _positionChangedSubscription;
         private IDisposable _zAxisUpdatedSubscription;
 
-        public void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection)
+        public void Initialise(IInitialiseContext context, IResourceCollection resourceCollection)
         {
             _positionChangedSubscription = ObjectBus.Subscribe<PositionChangedEvent>(e => _position = e.Position);
             _zAxisUpdatedSubscription = context.Bus.Subscribe<ZAxisUpdatedEvent>(e =>
@@ -32,10 +32,6 @@ namespace PersistentPlanet
         {
             _positionChangedSubscription?.Dispose();
             _zAxisUpdatedSubscription?.Dispose();
-        }
-
-        public void Render(D11RenderContext context)
-        {
         }
     }
 }

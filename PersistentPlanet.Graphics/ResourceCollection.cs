@@ -1,10 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using MemBus;
 
 namespace PersistentPlanet.Graphics
 {
-    public interface IMaterial
+    public interface IMaterial : IDisposable
     {
     }
 
@@ -17,13 +18,13 @@ namespace PersistentPlanet.Graphics
         where TRenderContext : IRenderContext
     {
         IMaterial<TRenderContext> CreateMaterial(IBus objectBus);
-        IMesh<TRenderContext> CreateMesh(Vertex[] vertices, int[] indices);
+        IMesh<TRenderContext> CreateMesh(Vertex[] vertices, uint[] indices);
     }
 
     public interface IResourceCollection
     {
         IMaterial CreateMaterial(IBus objectBus);
-        IMesh CreateMesh(Vertex[] vertices, int[] indices);
+        IMesh CreateMesh(Vertex[] vertices, uint[] indices);
     }
 
     public class ResourceCollection<TRenderContext> : IEnumerable<IResource<TRenderContext>>, IResourceCollection
@@ -45,7 +46,7 @@ namespace PersistentPlanet.Graphics
             return vertexShader;
         }
 
-        public IMesh CreateMesh(Vertex[] vertices, int[] indices)
+        public IMesh CreateMesh(Vertex[] vertices, uint[] indices)
         {
             var mesh = _resourceFactory.CreateMesh(vertices, indices);
             _items.Add(mesh);

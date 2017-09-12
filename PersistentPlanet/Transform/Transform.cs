@@ -49,7 +49,7 @@ namespace PersistentPlanet.Transform
         private bool _isDirty = true;
         private IDisposable _requestPositionUpdatedSubscription;
 
-        public void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection)
+        public void Initialise(IInitialiseContext context, IResourceCollection resourceCollection)
         {
             _requestPositionUpdatedSubscription = ObjectBus.Subscribe<RequestPositionUpdateEvent>(e => Position = e.Position);
         }

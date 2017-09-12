@@ -18,7 +18,7 @@ namespace PersistentPlanet.Graphics.DirectX11
             return material;
         }
 
-        public IMesh<D11RenderContext> CreateMesh(Vertex[] vertices, int[] indices)
+        public IMesh<D11RenderContext> CreateMesh(Vertex[] vertices, uint[] indices)
         {
             var mesh = new Mesh();
             mesh.Initialise(_context, vertices, indices);

@@ -1,10 +1,13 @@
-﻿namespace PersistentPlanet.Graphics
+﻿using System;
+
+namespace PersistentPlanet.Graphics
 {
-    public interface IMesh<in T> : IResource<T>, IMesh
-        where T : IRenderContext
+    public interface IMesh : IDisposable
     {
     }
-    public interface IMesh
+
+    public interface IMesh<in T> : IResource<T>, IMesh
+        where T : IRenderContext
     {
     }
 }

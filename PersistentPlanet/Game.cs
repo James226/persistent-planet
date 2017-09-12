@@ -45,9 +45,6 @@ namespace PersistentPlanet
             _cube.Initialise(initialiseContext, _scene);
             _cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
-            _material = new Material(_bus);
-            _material.Initialise(initialiseContext);
-
             _terrain = new GameObject();
             _terrain.AddComponent<Terrain.Terrain>();
             _terrain.Initialise(initialiseContext, _scene);
@@ -85,7 +82,7 @@ namespace PersistentPlanet
                                  () =>
                                  {
                                      _camera.Apply(renderContext);
-                                     _material.Render(renderContext);
+                                     //_material.Render(renderContext);
                                      _scene.Render(renderContext);
 
                                      //_cube.Render(renderContext);

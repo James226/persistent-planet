@@ -4,8 +4,6 @@ using MemBus;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
 using SharpDX;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
 using Device = SharpDX.Direct3D11.Device;
 
 namespace PersistentPlanet.Terrain
@@ -14,19 +12,16 @@ namespace PersistentPlanet.Terrain
     {
         public IBus ObjectBus { get; set; }
 
-        private Buffer _vertexBuffer;
-        private uint[] _indices;
-        private Buffer _indexBuffer;
-        private Material _material;
+        private IMaterial _material;
+        private IMesh _mesh;
 
-        public void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection)
+        public void Initialise(IInitialiseContext context, IResourceCollection resourceCollection)
         {
-            _material = new Material(ObjectBus);
-            _material.Initialise(context);
-            GenerateBuffers(context.Device);
+            _material = resourceCollection.CreateMaterial(ObjectBus);
+            GenerateBuffers(resourceCollection);
         }
 
-        private void GenerateBuffers(Device device)
+        private void GenerateBuffers(IResourceCollection resourceCollection)
         {
             using (var image = new Bitmap("heightmap.bmp"))
             {
@@ -96,9 +91,7 @@ namespace PersistentPlanet.Terrain
                     AddIndex(index2); // Bottom right.
                 }
 
-                _vertexBuffer = Buffer.Create(device, BindFlags.VertexBuffer, vertices);
-                _indices = indices.ToArray();
-                _indexBuffer = Buffer.Create(device, BindFlags.IndexBuffer, _indices);
+                _mesh = resourceCollection.CreateMesh(vertices, indices.ToArray());
             }
         }
 
@@ -261,22 +254,7 @@ namespace PersistentPlanet.Terrain
         public void Dispose()
         {
             _material?.Dispose();
-            _vertexBuffer.Dispose();
-            _indexBuffer.Dispose();
-        }
-
-        public void Render(D11RenderContext context)
-        {
-            _material.Render(context);
-            context.Context.InputAssembler.SetVertexBuffers(0,
-                                                            new VertexBufferBinding(
-                                                                _vertexBuffer,
-                                                                Utilities.SizeOf<Vertex>(),
-                                                                0));
-
-            context.Context.InputAssembler.SetIndexBuffer(_indexBuffer, Format.R32_UInt, 0);
-
-            context.Context.DrawIndexed(_indices.Length, 0, 0);
+            _mesh?.Dispose();
         }
     }
 }

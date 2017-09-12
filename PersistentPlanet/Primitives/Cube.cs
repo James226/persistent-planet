@@ -17,14 +17,9 @@ namespace PersistentPlanet.Primitives
 
         private IMesh _mesh;
         private IMaterial _material;
-        private int _bufferSize;
 
-        public void Initialise(D11InitialiseContext context, IResourceCollection resourceCollection)
+        public void Initialise(IInitialiseContext context, IResourceCollection resourceCollection)
         {
-            //_material = new Material(ObjectBus);
-            //_material.Initialise(context);
-
-
             var height = 5 * .5f;
             var width = 5 * .5f;
             var length = 5 * .5f;
@@ -43,7 +38,7 @@ namespace PersistentPlanet.Primitives
                 new Vertex(new Vector3(-width, -height, -length), new Vector2(1, 0), new Vector3(-halfPi, -halfPi, -halfPi)), 
             };
 
-            var indices = new []
+            var indices = new uint[]
             {
                 // Top
                 0, 1, 2,
@@ -70,20 +65,14 @@ namespace PersistentPlanet.Primitives
                 4, 5, 1
             };
 
-            _bufferSize = indices.Length;
-
             _material = resourceCollection.CreateMaterial(ObjectBus);
             _mesh = resourceCollection.CreateMesh(vertices, indices);
         }
 
         public void Dispose()
         {
-            //_material.Dispose();
-        }
-
-        public void Render(D11RenderContext context)
-        {
-            //_material.Render(context);
+            _material.Dispose();
+            _mesh?.Dispose();
         }
     }
 }
