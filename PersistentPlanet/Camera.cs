@@ -1,6 +1,7 @@
 ﻿using System;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.DirectX11;
 using SharpDX;
 using SharpDX.Direct3D11;
 using Buffer = SharpDX.Direct3D11.Buffer;
@@ -20,7 +21,7 @@ namespace PersistentPlanet
         private IDisposable _yAxisSubscription;
         private Vector2 _lastXAxis;
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             _projectionMatrix = Matrix.PerspectiveFovLH((float)Math.PI / 3f, context.RenderWindow.WindowWidth / (float)context.RenderWindow.WindowHeight, .5f, 1000f);
             _cameraPosition = new Vector3(150f, 10f, 0);
@@ -44,7 +45,7 @@ namespace PersistentPlanet
             _xAxisSubscription?.Dispose();
         }
 
-        public void Apply(RenderContext context)
+        public void Apply(D11RenderContext context)
         {
             const float movementSpeed = 30;
             _cameraPosition += _velocity * context.DeltaTime * movementSpeed;

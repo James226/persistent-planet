@@ -9,14 +9,6 @@
     <PackageReference Include="CoreCompat.System.Drawing" Version="1.0.0-beta006" />
     <PackageReference Include="Jitter.Standard" Version="1.0.0" />
     <PackageReference Include="MemBus" Version="4.0.0" />
-    <PackageReference Include="SharpDX" Version="4.0.1" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Direct2D1" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
-    <PackageReference Include="SharpDX.DirectSound" Version="4.0.1" />
-    <PackageReference Include="SharpDX.DXGI" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Mathematics" Version="4.0.1" />
-    <PackageReference Include="SharpDX.XInput" Version="4.0.1" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
 
@@ -42,10 +34,6 @@
     <None Update="vertexShader.hlsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Graphics\" />
   </ItemGroup>
 
 </Project>

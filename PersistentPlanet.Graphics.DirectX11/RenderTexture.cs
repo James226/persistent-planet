@@ -22,7 +22,7 @@ namespace PersistentPlanet.Graphics.DirectX11
             _height = height;
         }
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             int width = _width;
             int height = _height;
@@ -73,7 +73,7 @@ namespace PersistentPlanet.Graphics.DirectX11
             _texture.Dispose();
         }
 
-        public void Apply(RenderContext context)
+        public void Apply(D11RenderContext context)
         {
             context.Context.OutputMerger.SetRenderTargets((RenderTargetView) _renderTargetView);
         }

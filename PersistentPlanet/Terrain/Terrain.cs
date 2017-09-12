@@ -1,10 +1,9 @@
 ﻿using System.Drawing;
 using System.Linq;
+using System.Numerics;
 using MemBus;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
-using SharpDX;
-using Device = SharpDX.Direct3D11.Device;
 
 namespace PersistentPlanet.Terrain
 {

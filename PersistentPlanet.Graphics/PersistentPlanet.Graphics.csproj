@@ -6,11 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="MemBus" Version="4.0.0" />
-    <PackageReference Include="SharpDX" Version="4.0.1" />
-    <PackageReference Include="SharpDX.D3DCompiler" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Direct2D1" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Direct3D11" Version="4.0.1" />
-    <PackageReference Include="SharpDX.Mathematics" Version="4.0.1" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
 

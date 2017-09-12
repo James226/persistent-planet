@@ -21,7 +21,6 @@ namespace PersistentPlanet
         private D11Renderer _renderer;
         private Func<D11RenderContext> _renderContextGenerator;
         private Scene<D11RenderContext> _scene;
-        private Material _material;
 
         public Game(IRenderWindow renderWindow, IBus bus)
         {
@@ -57,7 +56,6 @@ namespace PersistentPlanet
         {
             _terrain?.Dispose();
             _cube?.Dispose();
-            _material?.Dispose();
             _bus?.Dispose();
         }
 
@@ -82,11 +80,7 @@ namespace PersistentPlanet
                                  () =>
                                  {
                                      _camera.Apply(renderContext);
-                                     //_material.Render(renderContext);
                                      _scene.Render(renderContext);
-
-                                     //_cube.Render(renderContext);
-                                     //_terrain.Render(renderContext);
                                  });
 
                 frame++;

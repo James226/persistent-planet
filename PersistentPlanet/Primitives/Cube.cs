@@ -1,13 +1,8 @@
 ﻿using System;
+using System.Numerics;
 using MemBus;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
-using SharpDX;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
-using Buffer = SharpDX.Direct3D11.Buffer;
-using Vector2 = SharpDX.Vector2;
-using Vector3 = SharpDX.Vector3;
 
 namespace PersistentPlanet.Primitives
 {

@@ -10,7 +10,7 @@ namespace PersistentPlanet.Graphics.DirectX11
 
         private DepthStencilState _depthStencilState;
 
-        public void Initialise(InitialiseContext context)
+        public void Initialise(D11InitialiseContext context)
         {
             var zBufferTextureDescription = new Texture2DDescription
             {
@@ -75,7 +75,7 @@ namespace PersistentPlanet.Graphics.DirectX11
             View?.Dispose();
         }
 
-        public void Apply(RenderContext context)
+        public void Apply(D11RenderContext context)
         {
             context.Context.OutputMerger.SetDepthStencilState(_depthStencilState);
             context.Context.ClearDepthStencilView(View, DepthStencilClearFlags.Depth, 1f, 0);
