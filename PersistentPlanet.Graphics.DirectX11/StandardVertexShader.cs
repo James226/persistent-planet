@@ -92,10 +92,5 @@ namespace PersistentPlanet.Graphics.DirectX11
 
             renderContext.Context.InputAssembler.InputLayout = _inputLayout;
         }
-
-        public void SetBuffer()
-        {
-            throw new System.NotImplementedException();
-        }
     }
 }

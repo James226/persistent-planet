@@ -2,7 +2,6 @@
 using MemBus;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
-using PersistentPlanet.Graphics.DirectX11;
 using PersistentPlanet.Transform;
 using SharpDX;
 
