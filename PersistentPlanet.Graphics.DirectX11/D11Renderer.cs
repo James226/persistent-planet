@@ -19,6 +19,7 @@ namespace PersistentPlanet.Graphics.DirectX11
         private DepthStencil _depthStencil;
         private Material _fullscreenMaterial;
         private D11ResourceFactory _resourceFactory;
+        private SamplerState _samplerState;
 
         public Scene<D11RenderContext> CreateScene()
         {

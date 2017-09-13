@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using MemBus;
 using PersistentPlanet.Controls.Controls;
+using PersistentPlanet.DualContouring;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
 using PersistentPlanet.Primitives;
@@ -45,7 +46,7 @@ namespace PersistentPlanet
             _cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
             _terrain = new GameObject();
-            _terrain.AddComponent<Terrain.Terrain>();
+            _terrain.AddComponent<VoxelObject>();
             _terrain.Initialise(initialiseContext, _scene);
 
             _camera = new Camera();

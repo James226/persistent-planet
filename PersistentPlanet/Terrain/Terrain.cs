@@ -3,7 +3,6 @@ using System.Linq;
 using System.Numerics;
 using MemBus;
 using PersistentPlanet.Graphics;
-using PersistentPlanet.Graphics.DirectX11;
 
 namespace PersistentPlanet.Terrain
 {
