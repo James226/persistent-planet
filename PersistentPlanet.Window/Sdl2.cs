@@ -16,11 +16,11 @@ namespace PersistentPlanet.Window
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                name = "libSDL2-2.0.so";
+                name = "libSDL2.so";
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                name = "libsdl2.dylib";
+                name = "libSDL2.dylib";
             }
             else
             {

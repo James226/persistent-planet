@@ -488,26 +488,6 @@ namespace PersistentPlanet.DualContouring
             d1 -= d0;
             var mid = 0 - d0;
             return p0 + ((p1 - p0) * (mid / d1));
-            var minValue = 100000f;
-            var t = 0f;
-            var currentT = 0f;
-            const int steps = 10;
-            const float increment = 1f / (float) steps;
-            while (currentT <= 1.0f)
-            {
-                CrossingPosition++;
-                var p = p0 + ((p1 - p0) * currentT);
-                var density = MathF.Abs(densityFunc(p));
-                if (density < minValue)
-                {
-                    minValue = density;
-                    t = currentT;
-                }
-
-                currentT += increment;
-            }
-
-            return p0 + ((p1 - p0) * t);
         }
 
         public static int NormalCount, CrossingPosition, Leaf;

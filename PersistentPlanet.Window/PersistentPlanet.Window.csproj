@@ -1,26 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="MemBus" Version="4.0.0" />
     <PackageReference Include="NativeLibraryLoader" Version="1.0.1" />
-    <PackageReference Include="sdl2.redist" Version="2.0.5" />
+    <PackageReference Include="sdl2.runtimes" Version="2.0.0" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.4.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="$(USERPROFILE)\.nuget\packages\sdl2.redist\2.0.5\build\native\bin\x64\dynamic\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\PersistentPlanet.Controls\PersistentPlanet.Controls.csproj" />
     <ProjectReference Include="..\PersistentPlanet.Primitives\PersistentPlanet.Primitives.csproj" />
   </ItemGroup>
-
 </Project>
