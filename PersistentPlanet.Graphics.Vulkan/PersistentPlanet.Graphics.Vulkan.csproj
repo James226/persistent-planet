@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VulkanCore" Version="1.0.0-alpha29" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PersistentPlanet.Graphics\PersistentPlanet.Graphics.csproj" />
+  </ItemGroup>
+
+</Project>

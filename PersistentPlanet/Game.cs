@@ -5,6 +5,7 @@ using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.DualContouring;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
+using PersistentPlanet.Graphics.Vulkan;
 using PersistentPlanet.Primitives;
 using SharpDX;
 
@@ -19,8 +20,8 @@ namespace PersistentPlanet
         private Camera _camera;
         private bool _running;
         private GameObject _terrain;
-        private D11Renderer _renderer;
-        private Func<D11RenderContext> _renderContextGenerator;
+        private VulkanRenderer _renderer;
+        private Func<VulkanRenderContext> _renderContextGenerator;
         private Scene<D11RenderContext> _scene;
 
         public Game(IRenderWindow renderWindow, IBus bus)
@@ -34,23 +35,23 @@ namespace PersistentPlanet
             _running = true;
             _bus.Subscribe<EscapePressedEvent>(_ => _running = false);
 
-            _renderer = new D11Renderer();
+            _renderer = new VulkanRenderer();
             (var initialiseContext, var renderContextGenerator) = _renderer.Initialise(_renderWindow, _bus);
             _renderContextGenerator = renderContextGenerator;
 
-            _scene = _renderer.CreateScene();
-            _cube = new GameObject();
-            _cube.AddComponent<Cube>();
-            _cube.AddComponent<CubeController>();
-            _cube.Initialise(initialiseContext, _scene);
-            _cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
+            //_scene = _renderer.CreateScene();
+            //_cube = new GameObject();
+            //_cube.AddComponent<Cube>();
+            //_cube.AddComponent<CubeController>();
+            //_cube.Initialise(initialiseContext, _scene);
+            //_cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
-            _terrain = new GameObject();
-            _terrain.AddComponent<VoxelObject>();
-            _terrain.Initialise(initialiseContext, _scene);
+            //_terrain = new GameObject();
+            //_terrain.AddComponent<VoxelObject>();
+            //_terrain.Initialise(initialiseContext, _scene);
 
-            _camera = new Camera();
-            _camera.Initialise(initialiseContext);
+            //_camera = new Camera();
+            //_camera.Initialise(initialiseContext);
         }
 
         public void Dispose()
@@ -80,8 +81,8 @@ namespace PersistentPlanet
                 _renderer.Render(renderContext,
                                  () =>
                                  {
-                                     _camera.Apply(renderContext);
-                                     _scene.Render(renderContext);
+                                     //_camera.Apply(renderContext);
+                                     //_scene.Render(renderContext);
                                  });
 
                 frame++;

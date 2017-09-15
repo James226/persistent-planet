@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet", "PersistentPlanet\PersistentPlanet.csproj", "{A20C1583-B0EF-45DC-944A-A77FC0DE1AF9}"
 EndProject
@@ -15,9 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Controls",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Controls.Tests", "PersistentPlanet.Controls.Tests\PersistentPlanet.Controls.Tests.csproj", "{AE85B95D-46A4-4E2D-864A-B460B2D00F35}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Graphics", "PersistentPlanet.Graphics\PersistentPlanet.Graphics.csproj", "{020FCB7C-88A8-4AF1-A187-ED0490390517}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Graphics", "PersistentPlanet.Graphics\PersistentPlanet.Graphics.csproj", "{020FCB7C-88A8-4AF1-A187-ED0490390517}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Graphics.DirectX11", "PersistentPlanet.Graphics.DirectX11\PersistentPlanet.Graphics.DirectX11.csproj", "{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistentPlanet.Graphics.DirectX11", "PersistentPlanet.Graphics.DirectX11\PersistentPlanet.Graphics.DirectX11.csproj", "{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersistentPlanet.Graphics.Vulkan", "PersistentPlanet.Graphics.Vulkan\PersistentPlanet.Graphics.Vulkan.csproj", "{B0DAB623-E61F-4B26-8EEB-E85879B9F262}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8D4B860-B2ED-4BF1-9C10-AD5A12F3620D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0DAB623-E61F-4B26-8EEB-E85879B9F262}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0DAB623-E61F-4B26-8EEB-E85879B9F262}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0DAB623-E61F-4B26-8EEB-E85879B9F262}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0DAB623-E61F-4B26-8EEB-E85879B9F262}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
