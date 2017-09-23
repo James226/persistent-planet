@@ -17,12 +17,12 @@ namespace PersistentPlanet
         private readonly IBus _bus;
 
         private GameObject _cube;
-        private Camera _camera;
+        private VulkanCamera _camera;
         private bool _running;
         private GameObject _terrain;
         private VulkanRenderer _renderer;
         private Func<VulkanRenderContext> _renderContextGenerator;
-        private Scene<D11RenderContext> _scene;
+        private Scene<VulkanRenderContext> _scene;
 
         public Game(IRenderWindow renderWindow, IBus bus)
         {
@@ -39,19 +39,26 @@ namespace PersistentPlanet
             (var initialiseContext, var renderContextGenerator) = _renderer.Initialise(_renderWindow, _bus);
             _renderContextGenerator = renderContextGenerator;
 
-            //_scene = _renderer.CreateScene();
-            //_cube = new GameObject();
-            //_cube.AddComponent<Cube>();
+            _scene = _renderer.CreateScene();
+            _cube = new GameObject();
+            _cube.AddComponent<Cube>();
+            _cube.Initialise(initialiseContext, _scene);
+
+            _terrain = new GameObject();
+            _terrain.AddComponent<VoxelObject>();
+            _terrain.Initialise(initialiseContext, _scene);
+
+            _renderer.RecordCommandBuffers(_renderWindow.WindowWidth, _renderWindow.WindowHeight,
+                                           context =>
+                                           {
+                                               _scene.Render(context);
+                                           });
             //_cube.AddComponent<CubeController>();
             //_cube.Initialise(initialiseContext, _scene);
             //_cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
-            //_terrain = new GameObject();
-            //_terrain.AddComponent<VoxelObject>();
-            //_terrain.Initialise(initialiseContext, _scene);
-
-            //_camera = new Camera();
-            //_camera.Initialise(initialiseContext);
+            _camera = new VulkanCamera();
+            _camera.Initialise(initialiseContext);
         }
 
         public void Dispose()
@@ -78,9 +85,12 @@ namespace PersistentPlanet
 
                 var renderContext = _renderContextGenerator.Invoke();
 
+                _camera.Apply(renderContext);
+
                 _renderer.Render(renderContext,
                                  () =>
                                  {
+
                                      //_camera.Apply(renderContext);
                                      //_scene.Render(renderContext);
                                  });

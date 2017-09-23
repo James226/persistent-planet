@@ -1,4 +1,5 @@
 ﻿using MemBus;
+using VulkanCore;
 
 namespace PersistentPlanet.Graphics.Vulkan
 {
@@ -6,5 +7,6 @@ namespace PersistentPlanet.Graphics.Vulkan
     {
         public IBus Bus { get; set; }
         public float DeltaTime { get; set; }
+        public CommandBuffer CommandBuffer { get; set; }
     }
 }

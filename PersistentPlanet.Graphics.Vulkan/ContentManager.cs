@@ -65,7 +65,8 @@ namespace PersistentPlanet.Graphics.Vulkan
         private static readonly Dictionary<int, Format> _glInternalFormatToVkFormat = new Dictionary<int, Format>()
         {
             [32855] = Format.R5G5B5A1UNormPack16,
-            [32856] = Format.R8G8B8A8UNorm
+            [32856] = Format.R8G8B8A8UNorm,
+            [37496] = Format.Etc2R8G8B8A8UNormBlock
         };
 
         public static VulkanImage LoadKtxVulkanImage(VulkanContext ctx, string path)

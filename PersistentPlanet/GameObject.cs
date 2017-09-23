@@ -4,6 +4,7 @@ using MemBus;
 using MemBus.Configurators;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
+using PersistentPlanet.Graphics.Vulkan;
 
 namespace PersistentPlanet
 {
@@ -37,7 +38,7 @@ namespace PersistentPlanet
             AddComponent<Transform.Transform>();
         }
 
-        public void Initialise(D11InitialiseContext initialiseContext, IScene scene)
+        public void Initialise(VulkanInitialiseContext initialiseContext, IScene scene)
         {
             _resourceCollection = scene.CreateResourceCollection();
             foreach (var component in _components)

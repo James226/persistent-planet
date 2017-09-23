@@ -66,7 +66,7 @@ namespace PersistentPlanet.Primitives
 
         public void Dispose()
         {
-            _material.Dispose();
+            _material?.Dispose();
             _mesh?.Dispose();
         }
     }

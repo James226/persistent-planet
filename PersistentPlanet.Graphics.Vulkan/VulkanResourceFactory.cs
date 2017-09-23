@@ -5,14 +5,24 @@ namespace PersistentPlanet.Graphics.Vulkan
 {
     public class VulkanResourceFactory : IResourceFactory<VulkanRenderContext>
     {
+        private readonly VulkanInitialiseContext _context;
+
+        public VulkanResourceFactory(VulkanInitialiseContext context)
+        {
+            _context = context;
+        }
+
         public IMaterial<VulkanRenderContext> CreateMaterial(IBus objectBus)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return null;
         }
 
         public IMesh<VulkanRenderContext> CreateMesh(Vertex[] vertices, uint[] indices)
         {
-            throw new NotImplementedException();
+            var mesh = new VulkanMesh();
+            mesh.Initialise(_context, vertices, indices);
+            return mesh;
         }
     }
 }

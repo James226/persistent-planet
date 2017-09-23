@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PersistentPlanet.Graphics.DirectX11\PersistentPlanet.Graphics.DirectX11.csproj" />
     <ProjectReference Include="..\PersistentPlanet.Graphics\PersistentPlanet.Graphics.csproj" />
   </ItemGroup>
 

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using MemBus;
+using PersistentPlanet.Graphics.DirectX11;
 using VulkanCore;
 using VulkanCore.Ext;
 using VulkanCore.Khr;
@@ -27,10 +29,10 @@ namespace PersistentPlanet.Graphics.Vulkan
         private ImageView[] _imageViews;
         private Framebuffer[] _framebuffers;
         private Pipeline _pipeline;
+        private VulkanBuffer _uniformBuffer;
 
         public (VulkanInitialiseContext, Func<VulkanRenderContext>) Initialise(IRenderWindow renderWindow, IBus bus)
         {
-            _resourceFactory = new VulkanResourceFactory();
 
             _instance = CreateInstance(true);
             _debugCallback = CreateDebugReportCallback(_instance, true);
@@ -39,8 +41,8 @@ namespace PersistentPlanet.Graphics.Vulkan
             _contentManager = new ContentManager(_context, "Content");
             _imageAvailableSemaphore = _context.Device.CreateSemaphore();
             _renderingFinishedSemaphore = _context.Device.CreateSemaphore();
+            _uniformBuffer = VulkanBuffer.DynamicUniform<WorldBuffer>(_context, 1);
 
-            var initialiseContext = new VulkanInitialiseContext {Context = _context};
             _swapChain = CreateSwapchain(_context, _surface);
             _swapChainImages = _swapChain.GetImages();
             _commandBuffers =
@@ -48,15 +50,59 @@ namespace PersistentPlanet.Graphics.Vulkan
                     new CommandBufferAllocateInfo(CommandBufferLevel.Primary, _swapChainImages.Length));
 
             _renderPass = CreateRenderPass();
+
+
+            var viewProjection = new WorldBuffer
+            {
+                View = Matrix4x4.CreateLookAt(-Vector3.UnitZ * 70 + Vector3.UnitY * 50, Vector3.Zero, -Vector3.UnitY),
+                Projection = Matrix4x4.CreatePerspectiveFieldOfView(
+                    (float)Math.PI / 4,
+                    (float)renderWindow.WindowWidth / renderWindow.WindowHeight,
+                    1.0f,
+                    1000.0f)
+            };
+
+            var ptr = _uniformBuffer.Memory.Map(0, Interop.SizeOf<WorldBuffer>());
+            Interop.Write(ptr, ref viewProjection);
+            _uniformBuffer.Memory.Unmap();
+
+            var initialiseContext = new VulkanInitialiseContext
+            {
+                Context = _context,
+                Content = _contentManager,
+                RenderPass = _renderPass,
+                RenderWindow = renderWindow,
+                WorldBuffer = _uniformBuffer,
+                Bus = bus
+            };
+            _resourceFactory = new VulkanResourceFactory(initialiseContext);
+
             _pipelineLayout = CreatePipelineLayout();
 
             _imageViews = CreateImageViews();
             _framebuffers = CreateFramebuffers(_imageViews, _renderPass, renderWindow.WindowWidth, renderWindow.WindowHeight);
             _pipeline = CreateGraphicsPipeline(_pipelineLayout, _renderPass, renderWindow.WindowWidth, renderWindow.WindowHeight);
 
-            RecordCommandBuffers(renderWindow.WindowWidth, renderWindow.WindowHeight);
 
-            return (initialiseContext, () => null);
+
+            Win32.QueryPerformanceFrequency(out var counterFrequency);
+            float ticksPerSecond = counterFrequency;
+
+            Win32.QueryPerformanceCounter(out var lastTimestamp);
+
+            var renderContext = new VulkanRenderContext
+            {
+                CommandBuffer = _commandBuffers[0],
+                Bus = bus
+            };
+            return (initialiseContext, () =>
+                                       { 
+                                           Win32.QueryPerformanceCounter(out var timestamp);
+                                           renderContext.DeltaTime = (timestamp - lastTimestamp) / ticksPerSecond;
+                                           lastTimestamp = timestamp;
+
+                                           return renderContext;
+                                       });
         }
 
         private Instance CreateInstance(bool debug)
@@ -87,7 +133,7 @@ namespace PersistentPlanet.Graphics.Vulkan
                 {
                     Constant.InstanceExtension.KhrSurface,
                     surfaceExtension,
-                    Constant.InstanceExtension.ExtDebugReport
+                    Constant.InstanceExtension.ExtDebugReport,
                 };
             }
             else
@@ -125,7 +171,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             {
                 return instance.CreateWin32SurfaceKhr(new Win32SurfaceCreateInfoKhr(Process.GetCurrentProcess().Handle, renderWindow.Handle));
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 // TODO: Support linux
                 //return instance.CreateWin32SurfaceKhr(new XlibSurfaceCreateInfoKhr(Process.GetCurrentProcess().Handle, renderWindow.Handle));
@@ -213,8 +259,8 @@ namespace PersistentPlanet.Graphics.Vulkan
 
         private Pipeline CreateGraphicsPipeline(PipelineLayout pipelineLayout, RenderPass renderPass, int width, int height)
         {
-            ShaderModule vertexShader = _contentManager.Load<ShaderModule>("Shader.vert.spv");
-            ShaderModule fragmentShader = _contentManager.Load<ShaderModule>("Shader.frag.spv");
+            ShaderModule vertexShader = _contentManager.Load<ShaderModule>("triangle.vert.spv");
+            ShaderModule fragmentShader = _contentManager.Load<ShaderModule>("triangle.frag.spv");
             var shaderStageCreateInfos = new[]
             {
                 new PipelineShaderStageCreateInfo(ShaderStages.Vertex, vertexShader, "main"),
@@ -263,7 +309,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             return _context.Device.CreateGraphicsPipeline(pipelineCreateInfo);
         }
 
-        private void RecordCommandBuffers(int width, int height)
+        public void RecordCommandBuffers(int width, int height, Action<VulkanRenderContext> record)
         {
             var subresourceRange = new ImageSubresourceRange(ImageAspects.Color, 0, 1, 0, 1);
             for (int i = 0; i < _commandBuffers.Length; i++)
@@ -285,7 +331,18 @@ namespace PersistentPlanet.Graphics.Vulkan
                         imageMemoryBarriers: new[] { barrierFromPresentToDraw });
                 }
 
-                RecordCommandBuffer(cmdBuffer, i, width, height);
+                var renderPassBeginInfo = new RenderPassBeginInfo(
+                    _framebuffers[i],
+                    new Rect2D(Offset2D.Zero, new Extent2D(width, height)),
+                    new ClearColorValue(new ColorF4(0.39f, 0.58f, 0.93f, 1.0f)));
+                cmdBuffer.CmdBeginRenderPass(renderPassBeginInfo);
+                cmdBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline);
+                //cmdBuffer.CmdDraw(3);
+
+                record.Invoke(new VulkanRenderContext { CommandBuffer = cmdBuffer });
+                //RecordCommandBuffer(cmdBuffer, i, width, height);
+
+                cmdBuffer.CmdEndRenderPass();
 
                 if (_context.PresentQueue != _context.GraphicsQueue)
                 {
@@ -307,15 +364,8 @@ namespace PersistentPlanet.Graphics.Vulkan
 
         protected void RecordCommandBuffer(CommandBuffer cmdBuffer, int imageIndex, int width, int height)
         {
-            var renderPassBeginInfo = new RenderPassBeginInfo(
-                _framebuffers[imageIndex],
-                new Rect2D(Offset2D.Zero, new Extent2D(width, height)),
-                new ClearColorValue(new ColorF4(0.39f, 0.58f, 0.93f, 1.0f)));
+            
 
-            cmdBuffer.CmdBeginRenderPass(renderPassBeginInfo);
-            cmdBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline);
-            cmdBuffer.CmdDraw(3);
-            cmdBuffer.CmdEndRenderPass();
         }
 
         public void Dispose()
@@ -326,6 +376,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             _context?.Dispose();
             _imageAvailableSemaphore?.Dispose();
             _renderingFinishedSemaphore?.Dispose();
+            _uniformBuffer?.Dispose();
             _swapChain?.Dispose();
             _contentManager?.Dispose();
             _renderPass?.Dispose();
@@ -353,5 +404,12 @@ namespace PersistentPlanet.Graphics.Vulkan
             // Present the color output to screen.
             _context.PresentQueue.PresentKhr(_renderingFinishedSemaphore, _swapChain, imageIndex);
         }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WorldBuffer
+    {
+        public Matrix4x4 View;
+        public Matrix4x4 Projection;
     }
 }

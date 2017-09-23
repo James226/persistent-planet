@@ -30,7 +30,7 @@ namespace PersistentPlanet.Graphics
             foreach (var resourceCollection in _resourceCollections)
             foreach (var resource in resourceCollection)
             {
-                resource.Render(context);
+                resource?.Render(context);
             }
         }
     }
