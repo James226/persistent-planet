@@ -49,9 +49,7 @@ namespace PersistentPlanet.Graphics.Vulkan
 
             _swapChain = CreateSwapchain(_context, _surface);
             _swapChainImages = _swapChain.GetImages();
-            _commandBuffers =
-                _context.GraphicsCommandPool.AllocateBuffers(
-                    new CommandBufferAllocateInfo(CommandBufferLevel.Primary, _swapChainImages.Length));
+            
 
             _renderPass = CreateRenderPass();
 
@@ -96,7 +94,6 @@ namespace PersistentPlanet.Graphics.Vulkan
 
             var renderContext = new VulkanRenderContext
             {
-                CommandBuffer = _commandBuffers[0],
                 Bus = bus
             };
             return (initialiseContext, () =>
@@ -399,12 +396,20 @@ namespace PersistentPlanet.Graphics.Vulkan
             return _context.Device.CreateGraphicsPipeline(pipelineCreateInfo);
         }
 
+        private bool _first = true;
         public void RecordCommandBuffers(int width, int height, Action<VulkanRenderContext> record)
         {
+            var commandBuffers =
+                _context.GraphicsCommandPool.AllocateBuffers(
+                    new CommandBufferAllocateInfo(CommandBufferLevel.Primary, _swapChainImages.Length));
+
             var subresourceRange = new ImageSubresourceRange(ImageAspects.Color, 0, 1, 0, 1);
-            for (int i = 0; i < _commandBuffers.Length; i++)
+            for (int i = 0; i < commandBuffers.Length; i++)
             {
-                CommandBuffer cmdBuffer = _commandBuffers[i];
+                CommandBuffer cmdBuffer = commandBuffers[i];
+
+                //_context.Device.WaitIdle();
+                //if (!_first) cmdBuffer.Reset();
                 cmdBuffer.Begin(new CommandBufferBeginInfo(CommandBufferUsages.SimultaneousUse));
 
                 if (_context.PresentQueue != _context.GraphicsQueue)
@@ -451,6 +456,7 @@ namespace PersistentPlanet.Graphics.Vulkan
 
                 cmdBuffer.End();
             }
+            _commandBuffers = commandBuffers;
         }
 
         protected void RecordCommandBuffer(CommandBuffer cmdBuffer, int imageIndex, int width, int height)

@@ -36,8 +36,17 @@ namespace PersistentPlanet.Controls
                 _publisher.Publish(new EscapePressedEvent());
             }
 
+            if (key == Key.Space)
+            {
+                _publisher.Publish(new PrimaryAction());
+            }
+
             _xAxisManager.KeyDown(key);
             _zAxisManager.KeyDown(key);
         }
+    }
+
+    public class PrimaryAction
+    {
     }
 }

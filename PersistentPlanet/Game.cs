@@ -50,11 +50,19 @@ namespace PersistentPlanet
             _terrain.AddComponent<VoxelObject>();
             _terrain.Initialise(initialiseContext, _scene);
 
-            _renderer.RecordCommandBuffers(_renderWindow.WindowWidth, _renderWindow.WindowHeight,
-                                           context =>
-                                           {
-                                               _scene.Render(context);
-                                           });
+            void RefreshCommandBuffers()
+            {
+                _renderer.RecordCommandBuffers(_renderWindow.WindowWidth,
+                                               _renderWindow.WindowHeight,
+                                               context =>
+                                               {
+                                                   _scene.Render(context);
+                                               });
+            }
+
+            RefreshCommandBuffers();
+
+            _bus.Subscribe<RefreshCommandBuffers>(_ => RefreshCommandBuffers());
 
             _camera = new VulkanCamera();
             _camera.Initialise(initialiseContext);

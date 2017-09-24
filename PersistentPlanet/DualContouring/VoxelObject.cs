@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using MemBus;
+using PersistentPlanet.Controls;
 using PersistentPlanet.Graphics;
 
 namespace PersistentPlanet.DualContouring
@@ -87,7 +88,15 @@ namespace PersistentPlanet.DualContouring
 
             void BuildMesh(Vertex[] vertices, uint[] indices)
             {
-                _mesh = resourceCollection.CreateMesh(ObjectBus, vertices, indices);
+                if (_mesh == null)
+                {
+                    _mesh = resourceCollection.CreateMesh(ObjectBus, vertices, indices);
+                }
+                else
+                {
+                    _mesh.Vertices = vertices;
+                    _mesh.Indices = indices;
+                }
             }
 
             Octree.GenerateMeshFromOctree(_root, BuildMesh);
@@ -244,6 +253,17 @@ namespace PersistentPlanet.DualContouring
 
         public void Initialise(IInitialiseContext context, IResourceCollection resourceCollection)
         {
+            context.Bus.Subscribe<PrimaryAction>(_ =>
+                                                 {
+                                                     Modifiers.Add(new DensityModifier
+                                                     {
+                                                         Additive = false,
+                                                         Position = Vector3.Zero,
+                                                         Size = 4,
+                                                         Tool = Tool.Sphere
+                                                     });
+                                                    SyncRebuild(resourceCollection);
+                                                 });
             SyncRebuild(resourceCollection);
         }
 

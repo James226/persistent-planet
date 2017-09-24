@@ -3,7 +3,9 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using MemBus;
 using PersistentPlanet.Graphics.DirectX11;
+using SharpDX.Direct2D1;
 using VulkanCore;
+using Filter = VulkanCore.Filter;
 
 namespace PersistentPlanet.Graphics.Vulkan
 {
@@ -26,6 +28,8 @@ namespace PersistentPlanet.Graphics.Vulkan
         private VulkanBuffer _objectBuffer;
         private VulkanImage _cubeTexture;
         private Sampler _sampler;
+        private VulkanContext _context;
+        private IBus _worldBus;
 
         public VulkanMesh(IBus objectBus)
         {
@@ -34,6 +38,8 @@ namespace PersistentPlanet.Graphics.Vulkan
 
         public void Initialise(VulkanInitialiseContext context, Vertex[] vertices, uint[] indices)
         {
+            _context = context.Context;
+            _worldBus = context.Bus;
             _cubeTexture = context.Content.Load<VulkanImage>("sand.ktx");
             _vertexBuffer = VulkanBuffer.Vertex(context.Context, vertices);
             _indexBuffer = VulkanBuffer.Index(context.Context, indices);
@@ -197,5 +203,25 @@ namespace PersistentPlanet.Graphics.Vulkan
             context.CommandBuffer.CmdBindIndexBuffer(_indexBuffer);
             context.CommandBuffer.CmdDrawIndexed(_indexBuffer.Count);
         }
+
+        public Vertex[] Vertices
+        {
+            set
+            {
+                _vertexBuffer = VulkanBuffer.Vertex(_context, value);
+                _worldBus.Publish(new RefreshCommandBuffers());
+            }
+        }
+
+        public uint[] Indices
+        {
+            set
+            {
+                _indexBuffer = VulkanBuffer.Index(_context, value);
+                _worldBus.Publish(new RefreshCommandBuffers());
+            }
+        }
     }
+
+    public class RefreshCommandBuffers { }
 }

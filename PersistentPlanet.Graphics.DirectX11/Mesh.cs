@@ -35,5 +35,8 @@ namespace PersistentPlanet.Graphics.DirectX11
 
             renderContext.Context.DrawIndexed(_size, 0, 0);
         }
+
+        public Vertex[] Vertices { get; set; }
+        public uint[] Indices { get; set; }
     }
 }
