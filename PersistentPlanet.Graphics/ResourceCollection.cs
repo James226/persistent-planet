@@ -18,13 +18,13 @@ namespace PersistentPlanet.Graphics
         where TRenderContext : IRenderContext
     {
         IMaterial<TRenderContext> CreateMaterial(IBus objectBus);
-        IMesh<TRenderContext> CreateMesh(Vertex[] vertices, uint[] indices);
+        IMesh<TRenderContext> CreateMesh(IBus objectBus, Vertex[] vertices, uint[] indices);
     }
 
     public interface IResourceCollection
     {
         IMaterial CreateMaterial(IBus objectBus);
-        IMesh CreateMesh(Vertex[] vertices, uint[] indices);
+        IMesh CreateMesh(IBus objectBus, Vertex[] vertices, uint[] indices);
     }
 
     public class ResourceCollection<TRenderContext> : IEnumerable<IResource<TRenderContext>>, IResourceCollection
@@ -46,9 +46,9 @@ namespace PersistentPlanet.Graphics
             return vertexShader;
         }
 
-        public IMesh CreateMesh(Vertex[] vertices, uint[] indices)
+        public IMesh CreateMesh(IBus objectBus, Vertex[] vertices, uint[] indices)
         {
-            var mesh = _resourceFactory.CreateMesh(vertices, indices);
+            var mesh = _resourceFactory.CreateMesh(objectBus, vertices, indices);
             _items.Add(mesh);
             return mesh;
         }

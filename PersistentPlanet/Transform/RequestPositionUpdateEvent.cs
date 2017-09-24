@@ -1,4 +1,5 @@
 using SharpDX;
+using Vector3 = System.Numerics.Vector3;
 
 namespace PersistentPlanet.Transform
 {

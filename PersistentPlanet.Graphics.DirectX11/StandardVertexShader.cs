@@ -1,8 +1,10 @@
-﻿using MemBus;
+﻿using System.Numerics;
+using MemBus;
 using SharpDX;
 using SharpDX.D3DCompiler;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
+using Vector3 = SharpDX.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
 namespace PersistentPlanet.Graphics.DirectX11
@@ -17,7 +19,7 @@ namespace PersistentPlanet.Graphics.DirectX11
         private InputLayout _inputLayout;
         private Buffer _lightBuffer;
         private Buffer _objectVsBuffer;
-        private Matrix _worldMatrix = Matrix.Identity;
+        private Matrix4x4 _worldMatrix = Matrix4x4.Identity;
 
         public StandardVertexShader(IBus objectBus, string filename, string function)
         {

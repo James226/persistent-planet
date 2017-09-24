@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Numerics;
 using MemBus;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.DualContouring;
@@ -7,7 +8,6 @@ using PersistentPlanet.Graphics;
 using PersistentPlanet.Graphics.DirectX11;
 using PersistentPlanet.Graphics.Vulkan;
 using PersistentPlanet.Primitives;
-using SharpDX;
 
 namespace PersistentPlanet
 {
@@ -42,7 +42,9 @@ namespace PersistentPlanet
             _scene = _renderer.CreateScene();
             _cube = new GameObject();
             _cube.AddComponent<Cube>();
+            _cube.AddComponent<CubeController>();
             _cube.Initialise(initialiseContext, _scene);
+            _cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
             _terrain = new GameObject();
             _terrain.AddComponent<VoxelObject>();
@@ -53,9 +55,6 @@ namespace PersistentPlanet
                                            {
                                                _scene.Render(context);
                                            });
-            //_cube.AddComponent<CubeController>();
-            //_cube.Initialise(initialiseContext, _scene);
-            //_cube.GetComponent<Transform.Transform>().Position = new Vector3(110, 7, 30);
 
             _camera = new VulkanCamera();
             _camera.Initialise(initialiseContext);

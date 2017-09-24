@@ -1,8 +1,7 @@
 using System;
+using System.Numerics;
 using MemBus;
 using PersistentPlanet.Graphics;
-using PersistentPlanet.Graphics.DirectX11;
-using SharpDX;
 
 namespace PersistentPlanet.Transform
 {
@@ -49,13 +48,10 @@ namespace PersistentPlanet.Transform
 
         private void RecalculateTransform()
         {
-            var transform = Matrix.Transformation(Vector3.Zero,
-                                               Quaternion.Identity,
-                                               Vector3.One,
-                                               Vector3.Zero,
-                                               _rotation,
-                                               _position);
-            transform.Transpose();
+            var transform = Matrix4x4.CreateTranslation(_position)
+                            * Matrix4x4.CreateFromQuaternion(_rotation)
+                            * Matrix4x4.CreateScale(1);
+
             ObjectBus.Publish(new WorldMatrixUpdatedEvent {WorldMatrix = transform});
         }
     }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using MemBus;
+using PersistentPlanet.Graphics.DirectX11;
 using VulkanCore;
 
 namespace PersistentPlanet.Graphics.Vulkan
@@ -13,6 +15,7 @@ namespace PersistentPlanet.Graphics.Vulkan
 
     public class VulkanMesh : IMesh<VulkanRenderContext>
     {
+        private readonly IBus _objectBus;
         private VulkanBuffer _vertexBuffer;
         private VulkanBuffer _indexBuffer;
         private PipelineLayout _pipelineLayout;
@@ -23,6 +26,11 @@ namespace PersistentPlanet.Graphics.Vulkan
         private VulkanBuffer _objectBuffer;
         private VulkanImage _cubeTexture;
         private Sampler _sampler;
+
+        public VulkanMesh(IBus objectBus)
+        {
+            _objectBus = objectBus;
+        }
 
         public void Initialise(VulkanInitialiseContext context, Vertex[] vertices, uint[] indices)
         {
@@ -41,14 +49,22 @@ namespace PersistentPlanet.Graphics.Vulkan
 
             _objectBuffer = VulkanBuffer.DynamicUniform<ObjectParams>(context.Context, 1);
 
-            var objectParams = new ObjectParams()
-            {
-                World = Matrix4x4.CreateTranslation(50, 0, 0), //Matrix4x4.CreateFromYawPitchRoll(0, MathF.PI / 4, MathF.PI / 4),
-            };
+            
 
-            var ptr = _objectBuffer.Memory.Map(0, Interop.SizeOf<WorldBuffer>());
-            Interop.Write(ptr, ref objectParams);
-            _objectBuffer.Memory.Unmap();
+            void UpdateWorldMatrix(Matrix4x4 worldMatrix)
+            {
+                var objectParams = new ObjectParams()
+                {
+                    World = worldMatrix,
+                };
+
+                var ptr = _objectBuffer.Memory.Map(0, Interop.SizeOf<WorldBuffer>());
+                Interop.Write(ptr, ref objectParams);
+                _objectBuffer.Memory.Unmap();
+            }
+
+            UpdateWorldMatrix(Matrix4x4.Identity);
+            _objectBus.Subscribe<WorldMatrixUpdatedEvent>(e => UpdateWorldMatrix(e.WorldMatrix));
 
             _descriptorSetLayout = context.Context.Device.CreateDescriptorSetLayout(new DescriptorSetLayoutCreateInfo(
                                                                                         new DescriptorSetLayoutBinding(0, DescriptorType.UniformBuffer, 1, ShaderStages.Vertex),

@@ -89,7 +89,7 @@ namespace PersistentPlanet.Terrain
                     AddIndex(index2); // Bottom right.
                 }
 
-                _mesh = resourceCollection.CreateMesh(vertices, indices.ToArray());
+                _mesh = resourceCollection.CreateMesh(ObjectBus, vertices, indices.ToArray());
             }
         }
 

@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Numerics;
 using MemBus;
 using PersistentPlanet.Controls.Controls;
 using PersistentPlanet.Graphics;
 using PersistentPlanet.Transform;
-using SharpDX;
 
 namespace PersistentPlanet
 {

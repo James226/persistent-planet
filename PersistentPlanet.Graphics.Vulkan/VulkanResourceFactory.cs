@@ -18,9 +18,9 @@ namespace PersistentPlanet.Graphics.Vulkan
             return null;
         }
 
-        public IMesh<VulkanRenderContext> CreateMesh(Vertex[] vertices, uint[] indices)
+        public IMesh<VulkanRenderContext> CreateMesh(IBus objectBus, Vertex[] vertices, uint[] indices)
         {
-            var mesh = new VulkanMesh();
+            var mesh = new VulkanMesh(objectBus);
             mesh.Initialise(_context, vertices, indices);
             return mesh;
         }

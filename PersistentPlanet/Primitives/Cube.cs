@@ -61,7 +61,7 @@ namespace PersistentPlanet.Primitives
             };
 
             _material = resourceCollection.CreateMaterial(ObjectBus);
-            _mesh = resourceCollection.CreateMesh(vertices, indices);
+            _mesh = resourceCollection.CreateMesh(ObjectBus, vertices, indices);
         }
 
         public void Dispose()

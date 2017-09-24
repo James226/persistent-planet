@@ -87,7 +87,7 @@ namespace PersistentPlanet.DualContouring
 
             void BuildMesh(Vertex[] vertices, uint[] indices)
             {
-                _mesh = resourceCollection.CreateMesh(vertices, indices);
+                _mesh = resourceCollection.CreateMesh(ObjectBus, vertices, indices);
             }
 
             Octree.GenerateMeshFromOctree(_root, BuildMesh);
