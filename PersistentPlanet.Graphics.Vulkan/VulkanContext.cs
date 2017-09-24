@@ -62,7 +62,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             MemoryProperties = PhysicalDevice.GetMemoryProperties();
             Features = PhysicalDevice.GetFeatures();
             Properties = PhysicalDevice.GetProperties();
-
+            
             // Create a logical device.
             bool sameGraphicsAndPresent = graphicsQueueFamilyIndex == presentQueueFamilyIndex;
             var queueCreateInfos = new DeviceQueueCreateInfo[sameGraphicsAndPresent ? 1 : 2];

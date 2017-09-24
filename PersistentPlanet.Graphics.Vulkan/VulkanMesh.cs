@@ -128,7 +128,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             {
                 DepthTestEnable = true,
                 DepthWriteEnable = true,
-                DepthCompareOp = CompareOp.GreaterOrEqual,
+                DepthCompareOp = CompareOp.LessOrEqual,
                 Back = new StencilOpState
                 {
                     FailOp = StencilOp.Keep,

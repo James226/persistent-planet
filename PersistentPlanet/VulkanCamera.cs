@@ -25,7 +25,7 @@ namespace PersistentPlanet
         public void Initialise(VulkanInitialiseContext context)
         {
             //_projectionMatrix = Matrix4x4.PerspectiveFovLH((float)Math.PI / 3f, context.RenderWindow.WindowWidth / (float)context.RenderWindow.WindowHeight, .5f, 1000f);
-            _cameraPosition = new Vector3(150f, 10f, 0);
+            _cameraPosition = new Vector3(0, 50f, -100);
 
             //_viewProjectionBuffer = new Buffer(context.Device,
             //                                   Utilities.SizeOf<Matrix>(),

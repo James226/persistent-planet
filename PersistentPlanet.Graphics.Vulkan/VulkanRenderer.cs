@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
@@ -30,6 +31,7 @@ namespace PersistentPlanet.Graphics.Vulkan
         private Framebuffer[] _framebuffers;
         private Pipeline _pipeline;
         private VulkanBuffer _uniformBuffer;
+        private VulkanImage _depthStencilBuffer;
 
         public (VulkanInitialiseContext, Func<VulkanRenderContext>) Initialise(IRenderWindow renderWindow, IBus bus)
         {
@@ -42,6 +44,8 @@ namespace PersistentPlanet.Graphics.Vulkan
             _imageAvailableSemaphore = _context.Device.CreateSemaphore();
             _renderingFinishedSemaphore = _context.Device.CreateSemaphore();
             _uniformBuffer = VulkanBuffer.DynamicUniform<WorldBuffer>(_context, 1);
+
+            _depthStencilBuffer = VulkanImage.DepthStencil(_context, renderWindow.WindowWidth, renderWindow.WindowHeight);
 
             _swapChain = CreateSwapchain(_context, _surface);
             _swapChainImages = _swapChain.GetImages();
@@ -103,6 +107,35 @@ namespace PersistentPlanet.Graphics.Vulkan
 
                                            return renderContext;
                                        });
+        }
+        
+        private static Format FindSupportedFormat(VulkanContext context, IEnumerable<Format> candidates, ImageTiling tiling, FormatFeatures features) {
+            foreach (var format in candidates)
+            {
+                var props = context.PhysicalDevice.GetFormatProperties(format);
+
+                if (tiling == ImageTiling.Linear && (props.LinearTilingFeatures & features) == features)
+                    return format;
+                if (tiling == ImageTiling.Optimal && (props.OptimalTilingFeatures & features) == features)
+                    return format;
+            }
+
+            throw new NotImplementedException("failed to find supported format!");
+        }
+
+        private static Format FindDepthFormat(VulkanContext context)
+        {
+            return FindSupportedFormat(
+                context,
+                new[] {Format.D32SFloat, Format.D32SFloatS8UInt, Format.D24UNormS8UInt},
+                ImageTiling.Optimal,
+                FormatFeatures.DepthStencilAttachment
+            );
+        }
+
+        private static bool HasStencilComponent(Format format)
+        {
+            return format == Format.D32SFloatS8UInt || format == Format.D24UNormS8UInt;
         }
 
         private Instance CreateInstance(bool debug)
@@ -203,26 +236,64 @@ namespace PersistentPlanet.Graphics.Vulkan
 
         private RenderPass CreateRenderPass()
         {
-            var subpasses = new[]
-            {
-                new SubpassDescription(new[] { new AttachmentReference(0, ImageLayout.ColorAttachmentOptimal) })
-            };
             var attachments = new[]
             {
+                // Color attachment.
                 new AttachmentDescription
                 {
-                    Samples = SampleCounts.Count1,
                     Format = _swapChain.Format,
-                    InitialLayout = ImageLayout.Undefined,
-                    FinalLayout = ImageLayout.PresentSrcKhr,
+                    Samples = SampleCounts.Count1,
                     LoadOp = AttachmentLoadOp.Clear,
                     StoreOp = AttachmentStoreOp.Store,
                     StencilLoadOp = AttachmentLoadOp.DontCare,
-                    StencilStoreOp = AttachmentStoreOp.DontCare
+                    StencilStoreOp = AttachmentStoreOp.DontCare,
+                    InitialLayout = ImageLayout.Undefined,
+                    FinalLayout = ImageLayout.PresentSrcKhr
+                },
+                // Depth attachment.
+                new AttachmentDescription
+                {
+                    Format = _depthStencilBuffer.Format,
+                    Samples = SampleCounts.Count1,
+                    LoadOp = AttachmentLoadOp.Clear,
+                    StoreOp = AttachmentStoreOp.DontCare,
+                    StencilLoadOp = AttachmentLoadOp.DontCare,
+                    StencilStoreOp = AttachmentStoreOp.DontCare,
+                    InitialLayout = ImageLayout.Undefined,
+                    FinalLayout = ImageLayout.DepthStencilAttachmentOptimal
+                }
+            };
+            var subpasses = new[]
+            {
+                new SubpassDescription(
+                    new[] { new AttachmentReference(0, ImageLayout.ColorAttachmentOptimal) },
+                    new AttachmentReference(1, ImageLayout.DepthStencilAttachmentOptimal))
+            };
+            var dependencies = new[]
+            {
+                new SubpassDependency
+                {
+                    SrcSubpass = Constant.SubpassExternal,
+                    DstSubpass = 0,
+                    SrcStageMask = PipelineStages.BottomOfPipe,
+                    DstStageMask = PipelineStages.ColorAttachmentOutput,
+                    SrcAccessMask = Accesses.MemoryRead,
+                    DstAccessMask = Accesses.ColorAttachmentRead | Accesses.ColorAttachmentWrite,
+                    DependencyFlags = Dependencies.ByRegion
+                },
+                new SubpassDependency
+                {
+                    SrcSubpass = 0,
+                    DstSubpass = Constant.SubpassExternal,
+                    SrcStageMask = PipelineStages.ColorAttachmentOutput,
+                    DstStageMask = PipelineStages.BottomOfPipe,
+                    SrcAccessMask = Accesses.ColorAttachmentRead | Accesses.ColorAttachmentWrite,
+                    DstAccessMask = Accesses.MemoryRead,
+                    DependencyFlags = Dependencies.ByRegion
                 }
             };
 
-            var createInfo = new RenderPassCreateInfo(subpasses, attachments);
+            var createInfo = new RenderPassCreateInfo(subpasses, attachments, dependencies);
             return _context.Device.CreateRenderPass(createInfo);
         }
 
@@ -244,7 +315,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             for (var i = 0; i < _swapChainImages.Length; i++)
             {
                 framebuffers[i] = renderPass.CreateFramebuffer(new FramebufferCreateInfo(
-                    new[] { imageViews[i] },
+                    new[] { imageViews[i], _depthStencilBuffer.View },
                     width,
                     height));
             }
@@ -297,6 +368,24 @@ namespace PersistentPlanet.Graphics.Vulkan
             var colorBlendStateCreateInfo = new PipelineColorBlendStateCreateInfo(
                 new[] { colorBlendAttachmentState });
 
+            var depthStencilCreateInfo = new PipelineDepthStencilStateCreateInfo
+            {
+                DepthTestEnable = true,
+                DepthWriteEnable = true,
+                DepthCompareOp = CompareOp.GreaterOrEqual,
+                Back = new StencilOpState
+                {
+                    FailOp = StencilOp.Keep,
+                    PassOp = StencilOp.Keep,
+                    CompareOp = CompareOp.Always
+                },
+                Front = new StencilOpState
+                {
+                    FailOp = StencilOp.Keep,
+                    PassOp = StencilOp.Keep,
+                    CompareOp = CompareOp.Always
+                }
+            };
             var pipelineCreateInfo = new GraphicsPipelineCreateInfo(
                 pipelineLayout, renderPass, 0,
                 shaderStageCreateInfos,
@@ -305,6 +394,7 @@ namespace PersistentPlanet.Graphics.Vulkan
                 rasterizationStateCreateInfo,
                 viewportState: viewportStateCreateInfo,
                 multisampleState: multisampleStateCreateInfo,
+                depthStencilState: depthStencilCreateInfo,
                 colorBlendState: colorBlendStateCreateInfo);
             return _context.Device.CreateGraphicsPipeline(pipelineCreateInfo);
         }
@@ -334,7 +424,8 @@ namespace PersistentPlanet.Graphics.Vulkan
                 var renderPassBeginInfo = new RenderPassBeginInfo(
                     _framebuffers[i],
                     new Rect2D(Offset2D.Zero, new Extent2D(width, height)),
-                    new ClearColorValue(new ColorF4(0.39f, 0.58f, 0.93f, 1.0f)));
+                    new ClearColorValue(new ColorF4(0.39f, 0.58f, 0.93f, 1.0f)),
+                    new ClearDepthStencilValue(1.0f, 0));
                 cmdBuffer.CmdBeginRenderPass(renderPassBeginInfo);
                 cmdBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline);
                 //cmdBuffer.CmdDraw(3);
@@ -376,6 +467,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             _context?.Dispose();
             _imageAvailableSemaphore?.Dispose();
             _renderingFinishedSemaphore?.Dispose();
+            _depthStencilBuffer?.Dispose();
             _uniformBuffer?.Dispose();
             _swapChain?.Dispose();
             _contentManager?.Dispose();
