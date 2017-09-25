@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using VulkanCore;
 using VulkanCore.Khr;
 
@@ -7,8 +8,11 @@ namespace PersistentPlanet.Graphics.Vulkan
 {
     public class VulkanContext : IDisposable
     {
-        public VulkanContext(Instance instance, SurfaceKhr surface)
+        public readonly CountdownLatch RenderWait;
+
+        public VulkanContext(Instance instance, SurfaceKhr surface, CountdownLatch renderWait)
         {
+            RenderWait = renderWait;
             // Find graphics and presentation capable physical device(s) that support
             // the provided surface for platform.
             int graphicsQueueFamilyIndex = -1;
@@ -86,7 +90,7 @@ namespace PersistentPlanet.Graphics.Vulkan
                 : Device.GetQueue(presentQueueFamilyIndex);
 
             // Create command pool(s).
-            GraphicsCommandPool = Device.CreateCommandPool(new CommandPoolCreateInfo(graphicsQueueFamilyIndex));
+            GraphicsCommandPool = Device.CreateCommandPool(new CommandPoolCreateInfo(graphicsQueueFamilyIndex, CommandPoolCreateFlags.ResetCommandBuffer));
             ComputeCommandPool = Device.CreateCommandPool(new CommandPoolCreateInfo(computeQueueFamilyIndex));
         }
 

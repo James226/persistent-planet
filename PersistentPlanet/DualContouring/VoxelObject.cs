@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
+using System.Threading.Tasks;
 using MemBus;
 using PersistentPlanet.Controls;
 using PersistentPlanet.Graphics;
+using PersistentPlanet.Graphics.Vulkan;
 
 namespace PersistentPlanet.DualContouring
 {
@@ -25,6 +27,7 @@ namespace PersistentPlanet.DualContouring
 
         private int _lastModifierCount;
         private bool _firstBuild = true;
+        private int _x;
 
         public bool Building => !_generated;
 
@@ -255,14 +258,17 @@ namespace PersistentPlanet.DualContouring
         {
             context.Bus.Subscribe<PrimaryAction>(_ =>
                                                  {
-                                                     Modifiers.Add(new DensityModifier
-                                                     {
-                                                         Additive = false,
-                                                         Position = Vector3.Zero,
-                                                         Size = 4,
-                                                         Tool = Tool.Sphere
-                                                     });
-                                                    SyncRebuild(resourceCollection);
+                                                     Task.Run(() =>
+                                                              {
+                                                                  Modifiers.Add(new DensityModifier
+                                                                  {
+                                                                      Additive = false,
+                                                                      Position = new Vector3(_x+=5, 0, 0),
+                                                                      Size = 4,
+                                                                      Tool = Tool.Sphere
+                                                                  });
+                                                                  SyncRebuild(resourceCollection);
+                                                              });
                                                  });
             SyncRebuild(resourceCollection);
         }

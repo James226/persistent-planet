@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using MemBus;
 using PersistentPlanet.Graphics.DirectX11;
 using VulkanCore;
 using VulkanCore.Ext;
 using VulkanCore.Khr;
+using Semaphore = VulkanCore.Semaphore;
 
 namespace PersistentPlanet.Graphics.Vulkan
 {
@@ -32,14 +34,16 @@ namespace PersistentPlanet.Graphics.Vulkan
         private Pipeline _pipeline;
         private VulkanBuffer _uniformBuffer;
         private VulkanImage _depthStencilBuffer;
+        private int _currentImage = 0;
 
         public (VulkanInitialiseContext, Func<VulkanRenderContext>) Initialise(IRenderWindow renderWindow, IBus bus)
         {
-
+            var renderWait = new CountdownLatch();
+            _renderWindow = renderWindow;
             _instance = CreateInstance(true);
             _debugCallback = CreateDebugReportCallback(_instance, true);
             _surface = CreateSurface(_instance, renderWindow);
-            _context = new VulkanContext(_instance, _surface);
+            _context = new VulkanContext(_instance, _surface, renderWait);
             _contentManager = new ContentManager(_context, "Content");
             _imageAvailableSemaphore = _context.Device.CreateSemaphore();
             _renderingFinishedSemaphore = _context.Device.CreateSemaphore();
@@ -85,7 +89,15 @@ namespace PersistentPlanet.Graphics.Vulkan
             _framebuffers = CreateFramebuffers(_imageViews, _renderPass, renderWindow.WindowWidth, renderWindow.WindowHeight);
             _pipeline = CreateGraphicsPipeline(_pipelineLayout, _renderPass, renderWindow.WindowWidth, renderWindow.WindowHeight);
 
+            _commandBuffers =
+                _context.GraphicsCommandPool.AllocateBuffers(
+                    new CommandBufferAllocateInfo(CommandBufferLevel.Primary, _swapChainImages.Length));
 
+            _fences = new Fence[2]
+            {
+                _context.Device.CreateFence(new FenceCreateInfo(FenceCreateFlags.Signaled)),
+                _context.Device.CreateFence(new FenceCreateInfo(FenceCreateFlags.Signaled)),
+            };
 
             Win32.QueryPerformanceFrequency(out var counterFrequency);
             float ticksPerSecond = counterFrequency;
@@ -94,8 +106,10 @@ namespace PersistentPlanet.Graphics.Vulkan
 
             var renderContext = new VulkanRenderContext
             {
-                Bus = bus
+                Bus = bus,
+                RenderWait = renderWait
             };
+            
             return (initialiseContext, () =>
                                        { 
                                            Win32.QueryPerformanceCounter(out var timestamp);
@@ -396,67 +410,57 @@ namespace PersistentPlanet.Graphics.Vulkan
             return _context.Device.CreateGraphicsPipeline(pipelineCreateInfo);
         }
 
-        private bool _first = true;
-        public void RecordCommandBuffers(int width, int height, Action<VulkanRenderContext> record)
+        public void RecordCommandBuffers(int width, int height, int i, Action record, VulkanRenderContext context)
         {
-            var commandBuffers =
-                _context.GraphicsCommandPool.AllocateBuffers(
-                    new CommandBufferAllocateInfo(CommandBufferLevel.Primary, _swapChainImages.Length));
-
             var subresourceRange = new ImageSubresourceRange(ImageAspects.Color, 0, 1, 0, 1);
-            for (int i = 0; i < commandBuffers.Length; i++)
+            CommandBuffer cmdBuffer = _commandBuffers[i];
+
+            cmdBuffer.Begin(new CommandBufferBeginInfo(CommandBufferUsages.SimultaneousUse));
+
+            if (_context.PresentQueue != _context.GraphicsQueue)
             {
-                CommandBuffer cmdBuffer = commandBuffers[i];
+                var barrierFromPresentToDraw = new ImageMemoryBarrier(
+                    _swapChainImages[i], subresourceRange,
+                    Accesses.MemoryRead, Accesses.ColorAttachmentWrite,
+                    ImageLayout.Undefined, ImageLayout.PresentSrcKhr,
+                    _context.PresentQueue.FamilyIndex, _context.GraphicsQueue.FamilyIndex);
 
-                //_context.Device.WaitIdle();
-                //if (!_first) cmdBuffer.Reset();
-                cmdBuffer.Begin(new CommandBufferBeginInfo(CommandBufferUsages.SimultaneousUse));
-
-                if (_context.PresentQueue != _context.GraphicsQueue)
-                {
-                    var barrierFromPresentToDraw = new ImageMemoryBarrier(
-                        _swapChainImages[i], subresourceRange,
-                        Accesses.MemoryRead, Accesses.ColorAttachmentWrite,
-                        ImageLayout.Undefined, ImageLayout.PresentSrcKhr,
-                        _context.PresentQueue.FamilyIndex, _context.GraphicsQueue.FamilyIndex);
-
-                    cmdBuffer.CmdPipelineBarrier(
-                        PipelineStages.ColorAttachmentOutput,
-                        PipelineStages.ColorAttachmentOutput,
-                        imageMemoryBarriers: new[] { barrierFromPresentToDraw });
-                }
-
-                var renderPassBeginInfo = new RenderPassBeginInfo(
-                    _framebuffers[i],
-                    new Rect2D(Offset2D.Zero, new Extent2D(width, height)),
-                    new ClearColorValue(new ColorF4(0.39f, 0.58f, 0.93f, 1.0f)),
-                    new ClearDepthStencilValue(1.0f, 0));
-                cmdBuffer.CmdBeginRenderPass(renderPassBeginInfo);
-                cmdBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline);
-                //cmdBuffer.CmdDraw(3);
-
-                record.Invoke(new VulkanRenderContext { CommandBuffer = cmdBuffer });
-                //RecordCommandBuffer(cmdBuffer, i, width, height);
-
-                cmdBuffer.CmdEndRenderPass();
-
-                if (_context.PresentQueue != _context.GraphicsQueue)
-                {
-                    var barrierFromDrawToPresent = new ImageMemoryBarrier(
-                        _swapChainImages[i], subresourceRange,
-                        Accesses.ColorAttachmentWrite, Accesses.MemoryRead,
-                        ImageLayout.PresentSrcKhr, ImageLayout.PresentSrcKhr,
-                        _context.GraphicsQueue.FamilyIndex, _context.PresentQueue.FamilyIndex);
-
-                    cmdBuffer.CmdPipelineBarrier(
-                        PipelineStages.ColorAttachmentOutput,
-                        PipelineStages.BottomOfPipe,
-                        imageMemoryBarriers: new[] { barrierFromDrawToPresent });
-                }
-
-                cmdBuffer.End();
+                cmdBuffer.CmdPipelineBarrier(
+                    PipelineStages.ColorAttachmentOutput,
+                    PipelineStages.ColorAttachmentOutput,
+                    imageMemoryBarriers: new[] { barrierFromPresentToDraw });
             }
-            _commandBuffers = commandBuffers;
+
+            var renderPassBeginInfo = new RenderPassBeginInfo(
+                _framebuffers[i],
+                new Rect2D(Offset2D.Zero, new Extent2D(width, height)),
+                new ClearColorValue(new ColorF4(0.39f, 0.58f, 0.93f, 1.0f)),
+                new ClearDepthStencilValue(1.0f, 0));
+            cmdBuffer.CmdBeginRenderPass(renderPassBeginInfo);
+            cmdBuffer.CmdBindPipeline(PipelineBindPoint.Graphics, _pipeline);
+            //cmdBuffer.CmdDraw(3);
+
+            context.CommandBuffer = cmdBuffer;
+            record.Invoke();
+            //RecordCommandBuffer(cmdBuffer, i, width, height);
+
+            cmdBuffer.CmdEndRenderPass();
+
+            if (_context.PresentQueue != _context.GraphicsQueue)
+            {
+                var barrierFromDrawToPresent = new ImageMemoryBarrier(
+                    _swapChainImages[i], subresourceRange,
+                    Accesses.ColorAttachmentWrite, Accesses.MemoryRead,
+                    ImageLayout.PresentSrcKhr, ImageLayout.PresentSrcKhr,
+                    _context.GraphicsQueue.FamilyIndex, _context.PresentQueue.FamilyIndex);
+
+                cmdBuffer.CmdPipelineBarrier(
+                    PipelineStages.ColorAttachmentOutput,
+                    PipelineStages.BottomOfPipe,
+                    imageMemoryBarriers: new[] { barrierFromDrawToPresent });
+            }
+
+            cmdBuffer.End();
         }
 
         protected void RecordCommandBuffer(CommandBuffer cmdBuffer, int imageIndex, int width, int height)
@@ -487,20 +491,33 @@ namespace PersistentPlanet.Graphics.Vulkan
             return new Scene<VulkanRenderContext>(_resourceFactory);
         }
 
+
+        private Fence[] _fences;
+        private int _lastSubmitted;
+        private IRenderWindow _renderWindow;
+
         public void Render(VulkanRenderContext context, Action render)
         {
             int imageIndex = _swapChain.AcquireNextImage(semaphore: _imageAvailableSemaphore);
+
+            _context.Device.WaitFences(new [] { _fences[imageIndex] }, true);
+            _fences[imageIndex].Reset();
+            context.RenderWait.WaitUntilZero();
+
+            RecordCommandBuffers(_renderWindow.WindowWidth, _renderWindow.WindowHeight, imageIndex, render, context);
 
             // Submit recorded commands to graphics queue for execution.
             _context.GraphicsQueue.Submit(
                 _imageAvailableSemaphore,
                 PipelineStages.ColorAttachmentOutput,
                 _commandBuffers[imageIndex],
-                _renderingFinishedSemaphore
+                _renderingFinishedSemaphore,
+                _fences[imageIndex]
             );
 
             // Present the color output to screen.
             _context.PresentQueue.PresentKhr(_renderingFinishedSemaphore, _swapChain, imageIndex);
+            _lastSubmitted = imageIndex;
         }
     }
 

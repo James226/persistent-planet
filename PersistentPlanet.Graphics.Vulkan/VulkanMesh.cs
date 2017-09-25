@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using MemBus;
 using PersistentPlanet.Graphics.DirectX11;
@@ -208,8 +207,9 @@ namespace PersistentPlanet.Graphics.Vulkan
         {
             set
             {
+                _context.RenderWait.Increment();
                 _vertexBuffer = VulkanBuffer.Vertex(_context, value);
-                _worldBus.Publish(new RefreshCommandBuffers());
+                _context.RenderWait.Decrement();
             }
         }
 
@@ -217,11 +217,10 @@ namespace PersistentPlanet.Graphics.Vulkan
         {
             set
             {
+                _context.RenderWait.Increment();
                 _indexBuffer = VulkanBuffer.Index(_context, value);
-                _worldBus.Publish(new RefreshCommandBuffers());
+                _context.RenderWait.Decrement();
             }
         }
     }
-
-    public class RefreshCommandBuffers { }
 }
