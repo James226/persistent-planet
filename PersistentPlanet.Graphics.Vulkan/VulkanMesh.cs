@@ -203,6 +203,14 @@ namespace PersistentPlanet.Graphics.Vulkan
             context.CommandBuffer.CmdDrawIndexed(_indexBuffer.Count);
         }
 
+        public void SetMesh(Vertex[] vertices, uint[] indices)
+        {
+            _context.RenderWait.Increment();
+            _vertexBuffer = VulkanBuffer.Vertex(_context, vertices);
+            _indexBuffer = VulkanBuffer.Index(_context, indices);
+            _context.RenderWait.Decrement();
+        }
+
         public Vertex[] Vertices
         {
             set

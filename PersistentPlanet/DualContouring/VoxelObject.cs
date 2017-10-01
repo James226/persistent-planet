@@ -22,8 +22,8 @@ namespace PersistentPlanet.DualContouring
         private bool _initialised;
         private bool _generated;
         private Thread _thread;
-        private static Dictionary<float, Dictionary<float, Dictionary<float, float>>> _densityCache;
-        private static Dictionary<float, Dictionary<float, Dictionary<float, float>>> _lastDensityCache;
+        private static Dictionary<int, float> _densityCache;
+        private static Dictionary<int, float> _lastDensityCache;
 
         private int _lastModifierCount;
         private bool _firstBuild = true;
@@ -45,8 +45,8 @@ namespace PersistentPlanet.DualContouring
             const int octreeSize = 64;
             _cacheHit = _cacheMiss = 0;
             Octree.sw = new Stopwatch();
-            _lastDensityCache = _densityCache ?? new Dictionary<float, Dictionary<float, Dictionary<float, float>>>();
-            _densityCache = new Dictionary<float, Dictionary<float, Dictionary<float, float>>>();
+            _lastDensityCache = _densityCache ?? new Dictionary<int, float>();
+            _densityCache = new Dictionary<int, float>();
             var threshold = -0.1f;
 
             if (position == null)
@@ -82,7 +82,7 @@ namespace PersistentPlanet.DualContouring
             Debug.WriteLine("Miss: " + _cacheMiss + ", Hit: " + _cacheHit + ", Count: " + _lastModifierCount);
             Debug.WriteLine("Crossing: " + Octree.CrossingPosition + ", Normal: " + Octree.NormalCount + ", Leaf: " + Octree.Leaf);
 
-            var c = _densityCache.Sum(x => x.Value.Sum(y => y.Value.Count));
+            var c = _densityCache.Count;
             Debug.WriteLine("Cache Size: " + c);
             _lastModifierCount = Modifiers.Count;
             _firstBuild = false;
@@ -97,8 +97,7 @@ namespace PersistentPlanet.DualContouring
                 }
                 else
                 {
-                    _mesh.Vertices = vertices;
-                    _mesh.Indices = indices;
+                    _mesh.SetMesh(vertices, indices);
                 }
             }
 
@@ -136,8 +135,9 @@ namespace PersistentPlanet.DualContouring
 
         private float Density_Func(Vector3 worldPosition)
         {
-            var lastDensity = GetCachedDensity(worldPosition);
-            return CalculateDensity(worldPosition, lastDensity ?? 0, _firstBuild || !lastDensity.HasValue);
+            //var lastDensity = GetCachedDensity(worldPosition);
+            return CalculateDensity(worldPosition, 0, true);
+            //return CalculateDensity(worldPosition, 0, true);
         }
 
         private static int _cacheHit, _cacheMiss;
@@ -145,37 +145,30 @@ namespace PersistentPlanet.DualContouring
 
         private float? GetCachedDensity(Vector3 worldPosition)
         {
-            if (_lastDensityCache.TryGetValue(worldPosition.X, out var x))
+            if (_lastDensityCache.TryGetValue($"{worldPosition.X},{worldPosition.Y},{worldPosition.Z}".GetHashCode(), out var d))
             {
-                if (x.TryGetValue(worldPosition.Y, out var y))
-                {
-                    if (y.TryGetValue(worldPosition.Z, out var d))
-                    {
-                        _cacheHit++;
-                        return d;
-                    }
-                }
+                _cacheHit++;
+                return d;
             }
             _cacheMiss++;
             return null;
         }
 
-        private float CalculateDensity(Vector3 worldPosition, float lastDensity, bool firstBuild)
+        private float CalculateDensity(Vector3 worldPosition, float density, bool firstBuild)
         {
-            var density = lastDensity;
             if (firstBuild)
             {
                 var MAX_HEIGHT = 20.0f;
                 //var noise = FractalNoise(4, 0.5343f, 2.2324f, 0.68324f, new Vector2(worldPosition.X, worldPosition.Z));
                 var terrain = worldPosition.Y - (MAX_HEIGHT * 0.6f); // noise);
 
-                //float cube = Cuboid(worldPosition, new Vector3(-4.0f, 10.0f, -4.0f), new Vector3(12.0f, 12.0f, 12.0f));
-                var cube = Cuboid(worldPosition, new Vector3(-4.0f, 10.0f, -4.0f), new Vector3(5, 5, 5));
+                ////float cube = Cuboid(worldPosition, new Vector3(-4.0f, 10.0f, -4.0f), new Vector3(12.0f, 12.0f, 12.0f));
+                //var cube = Cuboid(worldPosition, new Vector3(-4.0f, 10.0f, -4.0f), new Vector3(5, 5, 5));
 
-                var sphere = Sphere(worldPosition, new Vector3(15.0f, 1.5f, 1.0f), 16.0f);
-
-                density = MathF.Min(sphere, terrain);
-                density = MathF.Max(-cube, density);
+                //var sphere = Sphere(worldPosition, new Vector3(15.0f, 1.5f, 1.0f), 16.0f);
+                density = terrain;
+                //density = MathF.Min(sphere, terrain);
+                //density = MathF.Max(-cube, density);
             }
 
             for (var index = firstBuild ? 0 : _lastModifierCount; index < Modifiers.Count; index++)
@@ -196,20 +189,9 @@ namespace PersistentPlanet.DualContouring
                 }
                 density = m.Additive ? MathF.Min(d, density) : MathF.Max(-d, density);
             }
+            //return density;
+            //_densityCache[$"{worldPosition.X},{worldPosition.Y},{worldPosition.Z}".GetHashCode()] = density;
 
-            if (!_densityCache.TryGetValue(worldPosition.X, out var x))
-            {
-                x = new Dictionary<float, Dictionary<float, float>>();
-                _densityCache[worldPosition.X] = x;
-            }
-
-            if (!x.TryGetValue(worldPosition.Y, out var y))
-            {
-                y = new Dictionary<float, float>();
-                x[worldPosition.Y] = y;
-            }
-
-            y[worldPosition.Z] = density;
             return density;
         }
 
@@ -220,12 +202,6 @@ namespace PersistentPlanet.DualContouring
 
         private static float Cuboid(Vector3 worldPosition, Vector3 origin, Vector3 halfDimensions)
         {
-            //return (origin.x > worldPosition.x - halfDimensions.x && origin.x < worldPosition.x + halfDimensions.x &&
-            //        origin.y > worldPosition.y - halfDimensions.y && origin.y < worldPosition.y + halfDimensions.y &&
-            //        origin.z > worldPosition.z - halfDimensions.z && origin.z < worldPosition.z + halfDimensions.z)
-            //    ? 1
-            //    : -1;
-
             var localPos = worldPosition - origin;
             var pos = localPos;
 

@@ -36,6 +36,11 @@ namespace PersistentPlanet.Graphics.DirectX11
             renderContext.Context.DrawIndexed(_size, 0, 0);
         }
 
+        public void SetMesh(Vertex[] vertices, uint[] indices)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Vertex[] Vertices { get; set; }
         public uint[] Indices { get; set; }
     }

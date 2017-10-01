@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Threading;
 using MemBus;
 using PersistentPlanet.Graphics.DirectX11;
 using VulkanCore;
@@ -34,7 +32,10 @@ namespace PersistentPlanet.Graphics.Vulkan
         private Pipeline _pipeline;
         private VulkanBuffer _uniformBuffer;
         private VulkanImage _depthStencilBuffer;
-        private int _currentImage = 0;
+
+        private Fence[] _fences;
+        private IRenderWindow _renderWindow;
+        private CommandBuffer _computeCommandBuffer;
 
         public (VulkanInitialiseContext, Func<VulkanRenderContext>) Initialise(IRenderWindow renderWindow, IBus bus)
         {
@@ -93,11 +94,14 @@ namespace PersistentPlanet.Graphics.Vulkan
                 _context.GraphicsCommandPool.AllocateBuffers(
                     new CommandBufferAllocateInfo(CommandBufferLevel.Primary, _swapChainImages.Length));
 
-            _fences = new Fence[2]
+            _fences = new []
             {
                 _context.Device.CreateFence(new FenceCreateInfo(FenceCreateFlags.Signaled)),
                 _context.Device.CreateFence(new FenceCreateInfo(FenceCreateFlags.Signaled)),
             };
+
+            _computeCommandBuffer = _context.ComputeCommandPool.AllocateBuffers(new CommandBufferAllocateInfo(CommandBufferLevel.Primary, 1))[0];
+
 
             Win32.QueryPerformanceFrequency(out var counterFrequency);
             float ticksPerSecond = counterFrequency;
@@ -109,7 +113,17 @@ namespace PersistentPlanet.Graphics.Vulkan
                 Bus = bus,
                 RenderWait = renderWait
             };
-            
+
+            var shader = new ComputeShader();
+            shader.Initialise(initialiseContext);
+            shader.Record(renderContext, _computeCommandBuffer);
+            var processFence = _context.Device.CreateFence();
+            _context.ComputeQueue.Submit(new SubmitInfo(commandBuffers: new[] { _computeCommandBuffer }), processFence);
+            processFence.Wait();
+            processFence.Dispose();
+            shader.PrintResults(_context);
+            shader.Dispose();
+
             return (initialiseContext, () =>
                                        { 
                                            Win32.QueryPerformanceCounter(out var timestamp);
@@ -118,35 +132,6 @@ namespace PersistentPlanet.Graphics.Vulkan
 
                                            return renderContext;
                                        });
-        }
-        
-        private static Format FindSupportedFormat(VulkanContext context, IEnumerable<Format> candidates, ImageTiling tiling, FormatFeatures features) {
-            foreach (var format in candidates)
-            {
-                var props = context.PhysicalDevice.GetFormatProperties(format);
-
-                if (tiling == ImageTiling.Linear && (props.LinearTilingFeatures & features) == features)
-                    return format;
-                if (tiling == ImageTiling.Optimal && (props.OptimalTilingFeatures & features) == features)
-                    return format;
-            }
-
-            throw new NotImplementedException("failed to find supported format!");
-        }
-
-        private static Format FindDepthFormat(VulkanContext context)
-        {
-            return FindSupportedFormat(
-                context,
-                new[] {Format.D32SFloat, Format.D32SFloatS8UInt, Format.D24UNormS8UInt},
-                ImageTiling.Optimal,
-                FormatFeatures.DepthStencilAttachment
-            );
-        }
-
-        private static bool HasStencilComponent(Format format)
-        {
-            return format == Format.D32SFloatS8UInt || format == Format.D24UNormS8UInt;
         }
 
         private Instance CreateInstance(bool debug)
@@ -491,11 +476,6 @@ namespace PersistentPlanet.Graphics.Vulkan
             return new Scene<VulkanRenderContext>(_resourceFactory);
         }
 
-
-        private Fence[] _fences;
-        private int _lastSubmitted;
-        private IRenderWindow _renderWindow;
-
         public void Render(VulkanRenderContext context, Action render)
         {
             int imageIndex = _swapChain.AcquireNextImage(semaphore: _imageAvailableSemaphore);
@@ -517,7 +497,6 @@ namespace PersistentPlanet.Graphics.Vulkan
 
             // Present the color output to screen.
             _context.PresentQueue.PresentKhr(_renderingFinishedSemaphore, _swapChain, imageIndex);
-            _lastSubmitted = imageIndex;
         }
     }
 

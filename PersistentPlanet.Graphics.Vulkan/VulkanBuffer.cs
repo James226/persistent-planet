@@ -149,7 +149,7 @@ namespace PersistentPlanet.Graphics.Vulkan
             stagingBuffer.BindMemory(stagingMemory);
 
             // Create a device local buffer where the data will be copied.
-            Buffer buffer = ctx.Device.CreateBuffer(new BufferCreateInfo(size, BufferUsages.VertexBuffer | BufferUsages.StorageBuffer | BufferUsages.TransferDst));
+            Buffer buffer = ctx.Device.CreateBuffer(new BufferCreateInfo(size, BufferUsages.VertexBuffer | BufferUsages.StorageBuffer | BufferUsages.TransferDst | BufferUsages.TransferSrc));
             MemoryRequirements req = buffer.GetMemoryRequirements();
             int memoryTypeIndex = ctx.MemoryProperties.MemoryTypes.IndexOf(
                 req.MemoryTypeBits,

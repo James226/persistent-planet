@@ -4,6 +4,7 @@ namespace PersistentPlanet.Graphics
 {
     public interface IMesh : IDisposable
     {
+        void SetMesh(Vertex[] vertices, uint[] indices);
         Vertex[] Vertices { set; }
         uint[] Indices { set; }
     }
